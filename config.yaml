@@ -1,0 +1,43 @@
+application:
+  # dev开发环境 test测试环境 prod线上环境
+  mode: dev
+  # 服务名称
+  name: cgarbanzo
+  # 端口号
+  port: 8000 # 服务端口号
+  readtimeout: 30
+  writertimeout: 30
+jwt:
+  key: Q77c-x86qI2I9en-rwhYBWHhd575Z25ft-UGQeSqJa0=
+  # token 过期时间 单位：秒
+  expire-time: 604800
+captcha:
+  key-long: 6
+  img-width: 240
+  img-height: 80
+  open-captcha: 0
+  open-captcha-timeout: 3600
+mysql:
+  path: 127.0.0.1
+  port: 3306
+  config: charset=utf8mb4&parseTime=True&loc=Local
+  db-name: garbanzo
+  username: root
+  password: admin123456
+  max-idle-conns: 10
+  max-open-conns: 100
+  log-mode: ""
+  log-zap: false
+redis:
+  url: 127.0.0.1:6379
+  password: ""
+  db: 0
+zap:
+  level: debug
+  format: console
+  prefix: '[garbanzo-go]'
+  director: log
+  show-line: true
+  encode-level: LowercaseColorLevelEncoder
+  stacktrace-key: stacktrace
+  log-in-console: true
