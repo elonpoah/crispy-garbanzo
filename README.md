@@ -45,3 +45,12 @@ go run main.go
     "args": []
 }
 ```
+
+## 4 生成swaggo接口文档
+- [gin-swagger](http://github.com/swaggo/gin-swagger)
+- [swaggo-files](http://github.com/swaggo/files)
+- [swaggo-swag](http://github.com/swaggo/swag)
+
+```
+http://localhost:8000/swagger/index.html
+```

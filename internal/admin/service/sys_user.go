@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type UserService struct{}
@@ -36,4 +37,21 @@ func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysU
 		}
 	}
 	return &user, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: Register
+//@description: 用户注册
+//@param: u model.SysUser
+//@return: userInter system.SysUser, err error
+
+func (userService *UserService) Register(u system.SysUser) (userInter system.SysUser, err error) {
+	var user system.SysUser
+	if !errors.Is(global.FPG_DB.Where("username = ?", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+		return userInter, errors.New("用户名已注册")
+	}
+	// 否则 附加uuid 密码hash加密 注册
+	u.Password = utils.EncodePassword(u.Password, utils.GenSalt(8), 150000)
+	err = global.FPG_DB.Create(&u).Error
+	return u, err
 }

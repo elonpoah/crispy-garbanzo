@@ -12,6 +12,7 @@ type ApiRouter struct {
 func (s *ApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	var sysUser = v1.ApiGroupSys.SysUserApi
 	{
-		Router.POST("/admin/login", sysUser.Login)
+		Router.POST("/register", sysUser.Login)
+		Router.POST("/login", sysUser.Login)
 	}
 }

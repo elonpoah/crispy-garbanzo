@@ -1,14 +1,13 @@
 package response
 
-import (
-	system "crispy-garbanzo/internal/admin/models"
-)
-
 type SysUserResponse struct {
-	User system.SysUser `json:"user"`
+	Username string `json:"userName"`
+	NickName string `json:"nickName"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
 }
 
 type LoginResponse struct {
-	User  system.SysUser `json:"user"`
-	Token string         `json:"token"`
+	User  SysUserResponse `json:"user"`
+	Token string          `json:"token"`
 }

@@ -1,0 +1,112 @@
+definitions:
+  request.Login:
+    properties:
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  request.Register:
+    properties:
+      email:
+        type: string
+      nickName:
+        type: string
+      passWord:
+        type: string
+      phone:
+        type: string
+      userName:
+        type: string
+    required:
+    - nickName
+    - passWord
+    - userName
+    type: object
+  response.LoginResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/response.SysUserResponse'
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  response.SysUserResponse:
+    properties:
+      email:
+        type: string
+      nickName:
+        type: string
+      phone:
+        type: string
+      userName:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /admin/login:
+    post:
+      parameters:
+      - description: 用户名, 密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回包括用户信息,token
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.LoginResponse'
+                msg:
+                  type: string
+              type: object
+      summary: 登录
+      tags:
+      - 系统用户
+  /admin/register:
+    post:
+      parameters:
+      - description: 用户名, 昵称, 密码,
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户注册账号,返回包括用户信息 token
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.SysUserResponse'
+                msg:
+                  type: string
+              type: object
+      summary: 注册账号
+      tags:
+      - 系统用户
+swagger: "2.0"
