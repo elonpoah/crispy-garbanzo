@@ -37,7 +37,6 @@ func main() {
 		WriteTimeout:   time.Duration(global.FPG_CONFIG.Application.Writertimeout) * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
 	fmt.Printf("Gin mode is %s, server run success on %s\n", gin.Mode(), address)
 
 	s.ListenAndServe()

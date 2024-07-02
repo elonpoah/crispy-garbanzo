@@ -3,10 +3,10 @@ package v1
 import (
 	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
-	system "crispy-garbanzo/internal/admin/models"
-	systemReq "crispy-garbanzo/internal/admin/models/request"
-	systemRes "crispy-garbanzo/internal/admin/models/response"
-	"crispy-garbanzo/internal/admin/service"
+	system "crispy-garbanzo/internal/app/models"
+	systemReq "crispy-garbanzo/internal/app/models/request"
+	systemRes "crispy-garbanzo/internal/app/models/response"
+	"crispy-garbanzo/internal/app/service"
 	"crispy-garbanzo/utils"
 
 	"github.com/gin-gonic/gin"
@@ -21,7 +21,7 @@ type SysUserApi struct{}
 // @Produce   application/json
 // @Param    data  body      systemReq.Login                                             true  "用户名, 密码"
 // @Success  200   {object}  response.Response{data=systemRes.LoginResponse,msg=string}  "返回包括用户信息,token"
-// @Router   /admin/login [post]
+// @Router   /api/login [post]
 func (b *SysUserApi) Login(c *gin.Context) {
 	var l systemReq.Login
 	err := c.ShouldBindJSON(&l)
@@ -61,7 +61,7 @@ func (b *SysUserApi) Login(c *gin.Context) {
 // @Produce   application/json
 // @Param    data  body      systemReq.Register                                            true  "用户名, 昵称, 密码,"
 // @Success  200   {object}  response.Response{data=systemRes.SysUserResponse,msg=string}  "用户注册账号,返回包括用户信息 token"
-// @Router   /admin/register [post]
+// @Router   /api/register [post]
 func (b *SysUserApi) Register(c *gin.Context) {
 	var r systemReq.Register
 	err := c.ShouldBindJSON(&r)
@@ -73,7 +73,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 	userReturn, err := service.ServiceGroupSys.Register(*user)
 	if err != nil {
 		global.FPG_LOG.Error("注册失败!", zap.Error(err))
-		response.FailWithMessage("注册失败", c)
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	userInfo := systemRes.SysUserResponse{
@@ -87,4 +87,38 @@ func (b *SysUserApi) Register(c *gin.Context) {
 		User:  userInfo,
 		Token: token,
 	}, "注册成功", c)
+}
+
+// ChangePassword
+// @Tags      系统用户
+// @Summary   修改密码
+// @Security  ApiKeyAuth
+// @Produce  application/json
+// @Param     data  body      systemReq.ChangePasswordReq    true  "用户名, 原密码, 新密码"
+// @Success   200   {object}  response.Response{msg=string}  "用户修改密码"
+// @Router    /api/changePassword [post]
+func (b *SysUserApi) ChangePassword(c *gin.Context) {
+	var req systemReq.ChangePasswordReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = utils.Verify(req, utils.ChangePasswordVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	username, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+	}
+	u := &system.SysUser{Username: username, Password: req.Password}
+	_, err = service.ServiceGroupSys.ChangePassword(u, req.NewPassword)
+	if err != nil {
+		global.FPG_LOG.Error("修改失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("修改成功", c)
 }

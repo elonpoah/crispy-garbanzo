@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ import (
 )
 
 type JwtClaims struct {
-	Aid int    `json:"aid"`
+	Aid string `json:"aid"`
 	Src string `json:"src"`
 	Iat int64  `json:"iat"`
 	Exp int64  `json:"exp"`
@@ -93,6 +94,15 @@ func ParseToken(tokenString string, key string) (JwtClaims, error) {
 		}
 	} else {
 		return jwtClaims, fmt.Errorf("signing invalid: %v", err)
+	}
+}
+
+func GetUserID(c *gin.Context) (username string, err error) {
+	if claims, exists := c.Get("Aid"); !exists {
+		return "", errors.New("服务器内部错误")
+	} else {
+		waitUse := claims.(*JwtClaims)
+		return waitUse.Aid, nil
 	}
 }
 

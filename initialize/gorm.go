@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"crispy-garbanzo/global"
-	adminSys "crispy-garbanzo/internal/admin/models"
+	adminSys "crispy-garbanzo/internal/app/models"
 	"log"
 	"os"
 	"time"

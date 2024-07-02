@@ -2,7 +2,8 @@ package initialize
 
 import (
 	"crispy-garbanzo/global"
-	"crispy-garbanzo/internal/admin/router"
+	"crispy-garbanzo/internal/app/router"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -22,11 +23,14 @@ func Routers() *gin.Engine {
 			"message": "Success",
 		})
 	})
-	AdminGroup := Router.Group("admin")
+	address := fmt.Sprintf(":%s", global.FPG_CONFIG.Application.Port)
+	AdminGroup := Router.Group("api")
 	router.RouterGroupSys.InitApiRouter(AdminGroup)
 	// swagger；注意：生产环境可以注释掉
 	if global.FPG_CONFIG.Application.Mode != "prod" {
 		Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+		fmt.Printf("Swagger URL is http://localhost:%s/swagger/index.html\n", address)
+
 	}
 
 	return Router

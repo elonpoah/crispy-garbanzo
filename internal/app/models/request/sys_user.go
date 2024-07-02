@@ -13,3 +13,10 @@ type Login struct {
 	Username string `json:"username" binding:"required"` // 用户名
 	Password string `json:"password" binding:"required"` // 密码
 }
+
+// Modify password structure
+type ChangePasswordReq struct {
+	ID          uint   `json:"-"`           // 从 JWT 中提取 user id，避免越权
+	Password    string `json:"password"`    // 密码
+	NewPassword string `json:"newPassword"` // 新密码
+}

@@ -1,7 +1,7 @@
 package router
 
 import (
-	v1 "crispy-garbanzo/internal/admin/api/v1"
+	v1 "crispy-garbanzo/internal/app/api/v1"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,5 +14,6 @@ func (s *ApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	{
 		Router.POST("/register", sysUser.Login)
 		Router.POST("/login", sysUser.Login)
+		Router.POST("/changePassword", sysUser.ChangePassword)
 	}
 }

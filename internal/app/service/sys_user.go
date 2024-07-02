@@ -2,7 +2,7 @@ package service
 
 import (
 	"crispy-garbanzo/global"
-	system "crispy-garbanzo/internal/admin/models"
+	system "crispy-garbanzo/internal/app/models"
 	"crispy-garbanzo/utils"
 	"errors"
 	"fmt"
@@ -54,4 +54,29 @@ func (userService *UserService) Register(u system.SysUser) (userInter system.Sys
 	u.Password = utils.EncodePassword(u.Password, utils.GenSalt(8), 150000)
 	err = global.FPG_DB.Create(&u).Error
 	return u, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: ChangePassword
+//@description: 修改用户密码
+//@param: u *model.SysUser, newPassword string
+//@return: userInter *model.SysUser,err error
+
+func (userService *UserService) ChangePassword(u *system.SysUser, newPassword string) (userInter *system.SysUser, err error) {
+	var user system.SysUser
+	err = global.FPG_DB.Where("username = ?", u.Username).First(&user).Error
+	if err == nil {
+		ok, err := utils.VerifyPassword(u.Password, user.Password)
+		if nil != err {
+			return nil, errors.New("服务器内部错误")
+		}
+		if !ok {
+			global.FPG_LOG.Error("原密码错误:", zap.Error(err))
+			return nil, errors.New("原密码错误")
+		}
+	}
+	user.Password = utils.EncodePassword(newPassword, utils.GenSalt(8), 150000)
+	err = global.FPG_DB.Save(&user).Error
+	return &user, err
+
 }
