@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/gofrs/uuid/v5"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -27,12 +28,7 @@ func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysU
 	var user system.SysUser
 	err = global.FPG_DB.Where("username = ?", u.Username).First(&user).Error
 	if err == nil {
-		ok, err := utils.VerifyPassword(u.Password, user.Password)
-		if nil != err {
-			return nil, errors.New("服务器内部错误")
-		}
-		if !ok {
-			global.FPG_LOG.Error("verify password error", zap.Error(err))
+		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
 			return nil, errors.New("密码错误")
 		}
 	}
@@ -51,7 +47,8 @@ func (userService *UserService) Register(u system.SysUser) (userInter system.Sys
 		return userInter, errors.New("用户名已注册")
 	}
 	// 否则 附加uuid 密码hash加密 注册
-	u.Password = utils.EncodePassword(u.Password, utils.GenSalt(8), 150000)
+	u.Password = utils.BcryptHash(u.Password)
+	u.UUID = uuid.Must(uuid.NewV4())
 	err = global.FPG_DB.Create(&u).Error
 	return u, err
 }

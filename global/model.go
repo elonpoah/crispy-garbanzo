@@ -2,6 +2,8 @@ package global
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type ControlBy struct {
@@ -20,7 +22,8 @@ func (e *ControlBy) SetUpdateBy(updateBy int) {
 }
 
 type Model struct {
-	Id        int       `json:"id" gorm:"primaryKey;autoIncrement;comment:主键编码"`
-	CreatedAt time.Time `json:"createdAt" gorm:"comment:创建时间"`
-	UpdatedAt time.Time `json:"updatedAt" gorm:"comment:最后更新时间"`
+	ID        int            `json:"id" gorm:"primaryKey;autoIncrement;comment:主键编码"`
+	CreatedAt time.Time      `json:"createdAt" gorm:"comment:创建时间"`
+	UpdatedAt time.Time      `json:"updatedAt" gorm:"comment:最后更新时间"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"` // 删除时间
 }

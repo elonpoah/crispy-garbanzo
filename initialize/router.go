@@ -23,13 +23,12 @@ func Routers() *gin.Engine {
 			"message": "Success",
 		})
 	})
-	address := fmt.Sprintf(":%s", global.FPG_CONFIG.Application.Port)
 	AdminGroup := Router.Group("api")
 	router.RouterGroupSys.InitApiRouter(AdminGroup)
 	// swagger；注意：生产环境可以注释掉
 	if global.FPG_CONFIG.Application.Mode != "prod" {
 		Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-		fmt.Printf("Swagger URL is http://localhost:%s/swagger/index.html\n", address)
+		fmt.Printf("Swagger URL is http://localhost:%s/swagger/index.html\n", global.FPG_CONFIG.Application.Port)
 
 	}
 
