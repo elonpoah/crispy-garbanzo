@@ -54,8 +54,12 @@ definitions:
     type: object
   response.SysUserResponse:
     properties:
+      balance:
+        type: number
       email:
         type: string
+      freezeBalance:
+        type: number
       nickName:
         type: string
       phone:
@@ -69,7 +73,7 @@ paths:
   /api/changePassword:
     post:
       parameters:
-      - description: 用户名, 原密码, 新密码
+      - description: 原密码, 新密码
         in: body
         name: data
         required: true
@@ -91,7 +95,7 @@ paths:
       - ApiKeyAuth: []
       summary: 修改密码
       tags:
-      - 系统用户
+      - 用户中心
   /api/login:
     post:
       parameters:
@@ -117,7 +121,7 @@ paths:
               type: object
       summary: 登录
       tags:
-      - 系统用户
+      - 用户中心
   /api/register:
     post:
       parameters:
@@ -137,11 +141,16 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/response.SysUserResponse'
+                  $ref: '#/definitions/response.LoginResponse'
                 msg:
                   type: string
               type: object
       summary: 注册账号
       tags:
-      - 系统用户
+      - 用户中心
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

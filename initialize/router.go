@@ -3,6 +3,7 @@ package initialize
 import (
 	"crispy-garbanzo/global"
 	"crispy-garbanzo/internal/app/router"
+	"crispy-garbanzo/middleware"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,6 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 )
 
-// 初始化总路由
 func Routers() *gin.Engine {
 	Router := gin.Default()
 	Router.GET("/ping", func(c *gin.Context) {
@@ -23,8 +23,16 @@ func Routers() *gin.Engine {
 			"message": "Success",
 		})
 	})
-	AdminGroup := Router.Group("api")
-	router.RouterGroupSys.InitApiRouter(AdminGroup)
+	PublicGroup := Router.Group("api")
+	{
+		router.AppRouterGroup.BaseApiRouter.InitApiRouter(PublicGroup)
+	}
+
+	PrivateGroup := Router.Group("api")
+	PrivateGroup.Use(middleware.JWTAuth())
+	{
+		router.AppRouterGroup.UserApiRouter.InitApiRouter(PrivateGroup)
+	}
 	// swagger；注意：生产环境可以注释掉
 	if global.FPG_CONFIG.Application.Mode != "prod" {
 		Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

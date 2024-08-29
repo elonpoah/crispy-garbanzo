@@ -8,9 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-gota/gota v0.12.0
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/uuid v1.4.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/nicksnyder/go-i18n/v2 v2.4.0

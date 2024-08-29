@@ -18,6 +18,9 @@ func init() {
 	global.FPG_REIDS = initialize.Redis() // 初始化Redis连接
 }
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	// 程序结束前关闭数据链接
 	if global.FPG_DB != nil {

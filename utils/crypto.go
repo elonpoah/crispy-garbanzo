@@ -2,23 +2,14 @@ package utils
 
 import (
 	"crispy-garbanzo/global"
-	"crypto/hmac"
-	"crypto/md5"
-	cryptoRand "crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/rand"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
-	"golang.org/x/crypto/pbkdf2"
 )
 
 type JwtClaims struct {
@@ -26,38 +17,6 @@ type JwtClaims struct {
 	Src string `json:"src"`
 	Iat int64  `json:"iat"`
 	Exp int64  `json:"exp"`
-}
-
-func EncodePassword(password string, salt string, iterations int) string {
-	hash := pbkdf2.Key([]byte(password), []byte(salt), iterations, sha256.Size, sha256.New)
-	hexHash := hex.EncodeToString(hash)
-	return fmt.Sprintf("%s:%d$%s$%s", "pbkdf2:sha256", iterations, salt, hexHash)
-}
-
-func GenSalt(saltSize int) string {
-	saltBytes := make([]byte, saltSize)
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	cryptoRand.Read(saltBytes)
-	return hex.EncodeToString(saltBytes)
-}
-
-func VerifyPassword(password, encoded string) (bool, error) {
-	s := strings.Split(encoded, "$")
-	if len(s) != 3 {
-		return false, errors.New("pbkdf2: unreadable component in hashed password")
-	}
-	h := strings.Split(s[0], ":")
-	if len(h) != 3 {
-		return false, errors.New("pbkdf2: unreadable component in hashed password")
-	}
-	if h[0] != "pbkdf2" || h[1] != "sha256" {
-		return false, errors.New("pbkdf2: algorithm mismatch")
-	}
-	i, err := strconv.Atoi(h[2])
-	if err != nil {
-		return false, errors.New("pbkdf2: unreadable component in hashed password")
-	}
-	return hmac.Equal([]byte(EncodePassword(password, s[1], i)), []byte(encoded)), nil
 }
 
 func CreateToken(aid string, src string, key string, exp int) string {
@@ -97,17 +56,14 @@ func ParseToken(tokenString string, key string) (JwtClaims, error) {
 	}
 }
 
-func GetUserID(c *gin.Context) (username string, err error) {
-	if claims, exists := c.Get("Aid"); !exists {
-		return "", errors.New("服务器内部错误")
-	} else {
-		waitUse := claims.(*JwtClaims)
-		return waitUse.Aid, nil
+func GetUserID(c *gin.Context) (uid string, err error) {
+	username, exists := c.Get("uid")
+	if !exists {
+		return "", errors.New("user ID is invalid")
 	}
-}
-
-func GetMd5(buf []byte) string {
-	hash := md5.Sum(buf)
-	md5str := fmt.Sprintf("%x", hash)
-	return md5str
+	usernameStr, ok := username.(string)
+	if !ok {
+		return "", errors.New("user ID is invalid")
+	}
+	return usernameStr, nil
 }

@@ -1,7 +1,8 @@
 package router
 
 type RouterGroup struct {
-	ApiRouter
+	BaseApiRouter
+	UserApiRouter
 }
 
-var RouterGroupSys = new(RouterGroup)
+var AppRouterGroup = new(RouterGroup)

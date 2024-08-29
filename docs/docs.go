@@ -26,12 +26,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "系统用户"
+                    "用户中心"
                 ],
                 "summary": "修改密码",
                 "parameters": [
                     {
-                        "description": "用户名, 原密码, 新密码",
+                        "description": "原密码, 新密码",
                         "name": "data",
                         "in": "body",
                         "required": true,
@@ -68,7 +68,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "系统用户"
+                    "用户中心"
                 ],
                 "summary": "登录",
                 "parameters": [
@@ -113,7 +113,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "系统用户"
+                    "用户中心"
                 ],
                 "summary": "注册账号",
                 "parameters": [
@@ -139,7 +139,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/response.SysUserResponse"
+                                            "$ref": "#/definitions/response.LoginResponse"
                                         },
                                         "msg": {
                                             "type": "string"
@@ -235,8 +235,14 @@ const docTemplate = `{
         "response.SysUserResponse": {
             "type": "object",
             "properties": {
+                "balance": {
+                    "type": "number"
+                },
                 "email": {
                     "type": "string"
+                },
+                "freezeBalance": {
+                    "type": "number"
                 },
                 "nickName": {
                     "type": "string"
@@ -248,6 +254,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

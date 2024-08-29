@@ -41,7 +41,7 @@ func Gorm() *gorm.DB {
 	m := global.FPG_CONFIG.Mysql
 	mysqlConfig := mysql.Config{
 		DSN:                       m.Dsn(),
-		DefaultStringSize:         32,
+		DefaultStringSize:         191,
 		SkipInitializeWithVersion: false,
 	}
 	if db, err := gorm.Open(mysql.New(mysqlConfig), new(_gorm).Config()); err != nil {

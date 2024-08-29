@@ -16,7 +16,6 @@ type Login struct {
 
 // Modify password structure
 type ChangePasswordReq struct {
-	ID          uint   `json:"-"`           // 从 JWT 中提取 user id，避免越权
 	Password    string `json:"password"`    // 密码
 	NewPassword string `json:"newPassword"` // 新密码
 }

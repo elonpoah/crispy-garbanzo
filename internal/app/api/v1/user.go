@@ -16,7 +16,7 @@ import (
 type SysUserApi struct{}
 
 // Login
-// @Tags     系统用户
+// @Tags     用户中心
 // @Summary  登录
 // @Produce   application/json
 // @Param    data  body      systemReq.Login                                             true  "用户名, 密码"
@@ -56,11 +56,11 @@ func (b *SysUserApi) Login(c *gin.Context) {
 }
 
 // Register
-// @Tags     系统用户
+// @Tags     用户中心
 // @Summary  注册账号
 // @Produce   application/json
 // @Param    data  body      systemReq.Register                                            true  "用户名, 昵称, 密码,"
-// @Success  200   {object}  response.Response{data=systemRes.SysUserResponse,msg=string}  "用户注册账号,返回包括用户信息 token"
+// @Success  200   {object}  response.Response{data=systemRes.LoginResponse,msg=string}  "用户注册账号,返回包括用户信息 token"
 // @Router   /api/register [post]
 func (b *SysUserApi) Register(c *gin.Context) {
 	var r systemReq.Register
@@ -90,11 +90,11 @@ func (b *SysUserApi) Register(c *gin.Context) {
 }
 
 // ChangePassword
-// @Tags      系统用户
+// @Tags      用户中心
 // @Summary   修改密码
 // @Security  ApiKeyAuth
 // @Produce  application/json
-// @Param     data  body      systemReq.ChangePasswordReq    true  "用户名, 原密码, 新密码"
+// @Param     data  body      systemReq.ChangePasswordReq    true  "原密码, 新密码"
 // @Success   200   {object}  response.Response{msg=string}  "用户修改密码"
 // @Router    /api/changePassword [post]
 func (b *SysUserApi) ChangePassword(c *gin.Context) {
@@ -109,11 +109,12 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	username, err := utils.GetUserID(c)
+	uid, err := utils.GetUserID(c)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
+		return
 	}
-	u := &system.SysUser{Username: username, Password: req.Password}
+	u := &system.SysUser{Username: uid, Password: req.Password}
 	_, err = service.ServiceGroupSys.ChangePassword(u, req.NewPassword)
 	if err != nil {
 		global.FPG_LOG.Error("修改失败!", zap.Error(err))
