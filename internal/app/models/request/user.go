@@ -1,9 +1,9 @@
 package request
 
 type Register struct {
-	Username string `json:"userName" binding:"required"`
-	Password string `json:"passWord" binding:"required"`
-	NickName string `json:"nickName" binding:"required"`
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	NickName string `json:"nickName"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
 }

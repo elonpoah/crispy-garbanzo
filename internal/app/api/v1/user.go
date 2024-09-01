@@ -44,6 +44,7 @@ func (b *SysUserApi) Login(c *gin.Context) {
 	}
 	token := utils.CreateToken(user.Username, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
 	userInfo := systemRes.SysUserResponse{
+		ID:       user.ID,
 		Username: user.Username,
 		NickName: user.NickName,
 		Phone:    user.Phone,
@@ -77,6 +78,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 		return
 	}
 	userInfo := systemRes.SysUserResponse{
+		ID:       userReturn.ID,
 		Username: userReturn.Username,
 		NickName: userReturn.NickName,
 		Phone:    userReturn.Phone,
