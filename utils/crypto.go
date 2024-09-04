@@ -13,13 +13,13 @@ import (
 )
 
 type JwtClaims struct {
-	Aid string `json:"aid"`
+	Aid int    `json:"aid"`
 	Src string `json:"src"`
 	Iat int64  `json:"iat"`
 	Exp int64  `json:"exp"`
 }
 
-func CreateToken(aid string, src string, key string, exp int) string {
+func CreateToken(aid int, src string, key string, exp int) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"aid": aid,
 		"src": src,
@@ -56,14 +56,14 @@ func ParseToken(tokenString string, key string) (JwtClaims, error) {
 	}
 }
 
-func GetUserID(c *gin.Context) (uid string, err error) {
+func GetUserID(c *gin.Context) (uid int, err error) {
 	username, exists := c.Get("uid")
 	if !exists {
-		return "", errors.New("user ID is invalid")
+		return 0, errors.New("user ID is invalid")
 	}
-	usernameStr, ok := username.(string)
+	usernameStr, ok := username.(int)
 	if !ok {
-		return "", errors.New("user ID is invalid")
+		return 0, errors.New("user ID is invalid")
 	}
 	return usernameStr, nil
 }

@@ -12,8 +12,9 @@ type UserApiRouter struct {
 func (s *UserApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	var sysUser = v1.ApiGroupSys.SysUserApi
 	{
-		Router.POST("/changePassword", sysUser.ChangePassword)
-		Router.GET("/deposit-history", sysUser.GetUserDepositList)
-		Router.GET("/withdraw-history", sysUser.GetUserWithdrawList)
+		Router.POST("/change_password", sysUser.ChangePassword)
+		Router.GET("/user_info", sysUser.GetUserInfo)
+		Router.GET("/deposit_history", sysUser.GetUserDepositList)
+		Router.GET("/withdraw_history", sysUser.GetUserWithdrawList)
 	}
 }

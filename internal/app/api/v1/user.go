@@ -42,13 +42,15 @@ func (b *SysUserApi) Login(c *gin.Context) {
 		response.FailWithMessage("用户被禁止登录", c)
 		return
 	}
-	token := utils.CreateToken(user.Username, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
+	token := utils.CreateToken(user.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
 	userInfo := systemRes.SysUserResponse{
-		ID:       user.ID,
-		Username: user.Username,
-		NickName: user.NickName,
-		Phone:    user.Phone,
-		Email:    user.Email,
+		ID:            user.ID,
+		Username:      user.Username,
+		NickName:      user.NickName,
+		Phone:         user.Phone,
+		Email:         user.Email,
+		Balance:       user.Balance,
+		FreezeBalance: user.FreezeBalance,
 	}
 	response.OkWithDetailed(systemRes.LoginResponse{
 		User:  userInfo,
@@ -78,13 +80,15 @@ func (b *SysUserApi) Register(c *gin.Context) {
 		return
 	}
 	userInfo := systemRes.SysUserResponse{
-		ID:       userReturn.ID,
-		Username: userReturn.Username,
-		NickName: userReturn.NickName,
-		Phone:    userReturn.Phone,
-		Email:    userReturn.Email,
+		ID:            userReturn.ID,
+		Username:      userReturn.Username,
+		NickName:      userReturn.NickName,
+		Phone:         userReturn.Phone,
+		Email:         userReturn.Email,
+		Balance:       userReturn.Balance,
+		FreezeBalance: userReturn.FreezeBalance,
 	}
-	token := utils.CreateToken(user.Username, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
+	token := utils.CreateToken(user.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
 	response.OkWithDetailed(systemRes.LoginResponse{
 		User:  userInfo,
 		Token: token,
@@ -98,7 +102,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 // @Produce  application/json
 // @Param     data  body      systemReq.ChangePasswordReq    true  "原密码, 新密码"
 // @Success   200   {object}  response.Response{msg=string}  "用户修改密码"
-// @Router    /api/changePassword [post]
+// @Router    /api/change_password [post]
 func (b *SysUserApi) ChangePassword(c *gin.Context) {
 	var req systemReq.ChangePasswordReq
 	err := c.ShouldBindJSON(&req)
@@ -116,14 +120,44 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	u := &system.SysUser{Username: uid, Password: req.Password}
-	_, err = service.ServiceGroupSys.ChangePassword(u, req.NewPassword)
+	err = service.ServiceGroupSys.ChangePassword(uid, req.Password, req.NewPassword)
 	if err != nil {
 		global.FPG_LOG.Error("修改失败!", zap.Error(err))
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	response.OkWithMessage("修改成功", c)
+}
+
+// GetUserInfo
+// @Tags      用户中心
+// @Summary   用户信息
+// @Security  ApiKeyAuth
+// @Produce  application/json
+// @Success   200   {object}  response.Response{data=systemRes.LoginResponse, msg=string}  "返回包括用户信息"
+// @Router    /api/user_info [get]
+func (b *SysUserApi) GetUserInfo(c *gin.Context) {
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	userInfo, err := service.ServiceGroupSys.GetUserInfo(uid)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result := systemRes.SysUserResponse{
+		ID:            userInfo.ID,
+		Username:      userInfo.Username,
+		NickName:      userInfo.NickName,
+		Phone:         userInfo.Phone,
+		Email:         userInfo.Email,
+		Balance:       userInfo.Balance,
+		FreezeBalance: userInfo.FreezeBalance,
+	}
+	response.OkWithDetailed(result, "获取成功", c)
 }
 
 // GetUserDepositList

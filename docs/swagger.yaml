@@ -81,7 +81,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /api/changePassword:
+  /api/change_password:
     post:
       parameters:
       - description: 原密码, 新密码
@@ -193,6 +193,27 @@ paths:
                   type: string
               type: object
       summary: 注册账号
+      tags:
+      - 用户中心
+  /api/user_info:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回包括用户信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  $ref: '#/definitions/response.LoginResponse'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 用户信息
       tags:
       - 用户中心
   /api/withdraw-history:
