@@ -125,3 +125,81 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 	}
 	response.OkWithMessage("修改成功", c)
 }
+
+// GetUserDepositList
+// @Tags      用户中心
+// @Summary   充值记录
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
+// @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
+// @Router    /api/deposit-history [get]
+func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
+	var pageInfo systemReq.UserDepositRecordReq
+	err := c.ShouldBindQuery(&pageInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = utils.Verify(pageInfo, utils.PageInfoVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	list, total, err := service.ServiceGroupSys.GetUserDepositList(pageInfo, uid)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
+}
+
+// GetUserWithdrawList
+// @Tags      用户中心
+// @Summary   提现记录
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
+// @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
+// @Router    /api/withdraw-history [get]
+func (b *SysUserApi) GetUserWithdrawList(c *gin.Context) {
+	var pageInfo systemReq.UserWithdrawRecordReq
+	err := c.ShouldBindQuery(&pageInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = utils.Verify(pageInfo, utils.PageInfoVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	list, total, err := service.ServiceGroupSys.GetUserWithdrawList(pageInfo, uid)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
+}

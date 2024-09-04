@@ -26,16 +26,15 @@ definitions:
         type: string
       nickName:
         type: string
-      passWord:
+      password:
         type: string
       phone:
         type: string
-      userName:
+      username:
         type: string
     required:
-    - nickName
-    - passWord
-    - userName
+    - password
+    - username
     type: object
   response.LoginResponse:
     properties:
@@ -43,6 +42,16 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/response.SysUserResponse'
+    type: object
+  response.PageResult:
+    properties:
+      list: {}
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
     type: object
   response.Response:
     properties:
@@ -64,6 +73,8 @@ definitions:
         type: string
       phone:
         type: string
+      uid:
+        type: integer
       userName:
         type: string
     type: object
@@ -94,6 +105,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 修改密码
+      tags:
+      - 用户中心
+  /api/deposit-history:
+    get:
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取用户列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 充值记录
       tags:
       - 用户中心
   /api/login:
@@ -146,6 +193,42 @@ paths:
                   type: string
               type: object
       summary: 注册账号
+      tags:
+      - 用户中心
+  /api/withdraw-history:
+    get:
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取用户列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 提现记录
       tags:
       - 用户中心
 securityDefinitions:

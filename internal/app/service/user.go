@@ -3,6 +3,7 @@ package service
 import (
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
+	"crispy-garbanzo/internal/app/models/request"
 	"crispy-garbanzo/utils"
 	"errors"
 	"fmt"
@@ -68,4 +69,48 @@ func (userService *UserService) ChangePassword(u *system.SysUser, newPassword st
 	err = global.FPG_DB.Save(&user).Error
 	return &user, err
 
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: GetUserDepositList
+//@description: 分页获取数据
+//@param: info request.PageInfo
+//@return: err error, list interface{}, total int64
+
+func (userService *UserService) GetUserDepositList(info request.UserDepositRecordReq, uid string) (list interface{}, total int64, err error) {
+	limit := info.PageSize
+	offset := info.PageSize * (info.Page - 1)
+	db := global.FPG_DB.Model(&system.Deposit{}).Where("uid = ?", uid)
+	var dataList []system.Deposit
+	// if info.Username != "" {
+	// 	db = db.Where("username = ?", info.Username)
+	// }
+	err = db.Count(&total).Error
+	if err != nil {
+		return
+	}
+	err = db.Limit(limit).Offset(offset).Find(&dataList).Error
+	return dataList, total, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: GetUserWithdrawList
+//@description: 分页获取数据
+//@param: info request.PageInfo
+//@return: err error, list interface{}, total int64
+
+func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRecordReq, uid string) (list interface{}, total int64, err error) {
+	limit := info.PageSize
+	offset := info.PageSize * (info.Page - 1)
+	db := global.FPG_DB.Model(&system.Withdrawal{}).Where("uid = ?", uid)
+	var dataList []system.Withdrawal
+	// if info.Username != "" {
+	// 	db = db.Where("username = ?", info.Username)
+	// }
+	err = db.Count(&total).Error
+	if err != nil {
+		return
+	}
+	err = db.Limit(limit).Offset(offset).Find(&dataList).Error
+	return dataList, total, err
 }

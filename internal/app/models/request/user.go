@@ -1,5 +1,10 @@
 package request
 
+import (
+	"crispy-garbanzo/common/request"
+	// system "crispy-garbanzo/internal/app/models"
+)
+
 type Register struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -18,4 +23,14 @@ type Login struct {
 type ChangePasswordReq struct {
 	Password    string `json:"password"`    // 密码
 	NewPassword string `json:"newPassword"` // 新密码
+}
+
+type UserDepositRecordReq struct {
+	request.PageInfo
+	// system.Deposit
+}
+
+type UserWithdrawRecordReq struct {
+	request.PageInfo
+	// system.Deposit
 }
