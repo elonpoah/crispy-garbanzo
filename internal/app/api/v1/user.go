@@ -88,7 +88,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 		Balance:       userReturn.Balance,
 		FreezeBalance: userReturn.FreezeBalance,
 	}
-	token := utils.CreateToken(user.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
+	token := utils.CreateToken(userReturn.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
 	response.OkWithDetailed(systemRes.LoginResponse{
 		User:  userInfo,
 		Token: token,
