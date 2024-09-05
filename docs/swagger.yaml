@@ -20,6 +20,21 @@ definitions:
     - password
     - username
     type: object
+  request.PageInfo:
+    properties:
+      keyword:
+        description: 关键字
+        type: string
+      page:
+        description: 页码
+        type: integer
+      pageSize:
+        description: 每页大小
+        type: integer
+    required:
+    - page
+    - pageSize
+    type: object
   request.Register:
     properties:
       email:
@@ -35,6 +50,32 @@ definitions:
     required:
     - password
     - username
+    type: object
+  request.SessionDetailReq:
+    properties:
+      id:
+        type: integer
+    required:
+    - id
+    type: object
+  request.SessionListReq:
+    properties:
+      keyword:
+        description: 关键字
+        type: string
+      page:
+        description: 页码
+        type: integer
+      pageSize:
+        description: 每页大小
+        type: integer
+      type:
+        description: 1:hight bonus 2:hight rate 3:hot"
+        type: integer
+    required:
+    - page
+    - pageSize
+    - type
     type: object
   response.LoginResponse:
     properties:
@@ -78,10 +119,31 @@ definitions:
       userName:
         type: string
     type: object
+  system.ActivitySession:
+    properties:
+      activityBonus:
+        type: integer
+      activityId:
+        type: integer
+      activityLimitCount:
+        type: integer
+      activityName:
+        type: string
+      activitySpend:
+        type: integer
+      id:
+        type: integer
+      openTime:
+        type: integer
+      status:
+        type: integer
+      uids:
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
-  /api/change_password:
+  /api/change/password:
     post:
       parameters:
       - description: 原密码, 新密码
@@ -107,7 +169,7 @@ paths:
       summary: 修改密码
       tags:
       - 用户中心
-  /api/deposit-history:
+  /api/deposit/history:
     get:
       parameters:
       - description: 关键字
@@ -143,6 +205,51 @@ paths:
       summary: 充值记录
       tags:
       - 用户中心
+  /api/game/history:
+    post:
+      parameters:
+      - description: 页码, 每页大小
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.PageInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取用户列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      summary: 抽奖记录
+      tags:
+      - 活动中心
+  /api/home/recommand:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  $ref: '#/definitions/system.ActivitySession'
+              type: object
+      summary: 首页推荐
+      tags:
+      - 活动中心
   /api/login:
     post:
       parameters:
@@ -195,7 +302,115 @@ paths:
       summary: 注册账号
       tags:
       - 用户中心
-  /api/user_info:
+  /api/session/check:
+    post:
+      parameters:
+      - description: 场次ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SessionDetailReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  type: boolean
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 是否已购入场券
+      tags:
+      - 活动中心
+  /api/session/detail:
+    post:
+      parameters:
+      - description: 场次ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SessionDetailReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  $ref: '#/definitions/system.ActivitySession'
+              type: object
+      summary: 活动场次详情
+      tags:
+      - 活动中心
+  /api/session/list:
+    post:
+      parameters:
+      - description: 页码, 每页大小
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SessionListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取用户列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      summary: 场次列表
+      tags:
+      - 活动中心
+  /api/session/ticket:
+    post:
+      parameters:
+      - description: 场次ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SessionDetailReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  $ref: '#/definitions/system.ActivitySession'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 购买入场券
+      tags:
+      - 活动中心
+  /api/user/info:
     get:
       produces:
       - application/json
@@ -216,7 +431,7 @@ paths:
       summary: 用户信息
       tags:
       - 用户中心
-  /api/withdraw-history:
+  /api/withdraw/history:
     get:
       parameters:
       - description: 关键字

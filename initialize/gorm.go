@@ -59,6 +59,7 @@ func RegisterTables() {
 	err := db.AutoMigrate(
 
 		adminSys.SysUser{},
+		adminSys.GameRecord{},
 	)
 	if err != nil {
 		global.FPG_LOG.Error("register table failed", zap.Error(err))

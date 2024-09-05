@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/change_password": {
+        "/api/change/password": {
             "post": {
                 "security": [
                     {
@@ -62,7 +62,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/deposit-history": {
+        "/api/deposit/history": {
             "get": {
                 "security": [
                     {
@@ -114,6 +114,85 @@ const docTemplate = `{
                                         },
                                         "msg": {
                                             "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/game/history": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "抽奖记录",
+                "parameters": [
+                    {
+                        "description": "页码, 每页大小",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PageInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页获取用户列表,返回包括列表,总数,页码,每页数量",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.PageResult"
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/home/recommand": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "首页推荐",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/system.ActivitySession"
                                         }
                                     }
                                 }
@@ -213,7 +292,197 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/user_info": {
+        "/api/session/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "是否已购入场券",
+                "parameters": [
+                    {
+                        "description": "场次ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SessionDetailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session/detail": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "活动场次详情",
+                "parameters": [
+                    {
+                        "description": "场次ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SessionDetailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/system.ActivitySession"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session/list": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "场次列表",
+                "parameters": [
+                    {
+                        "description": "页码, 每页大小",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SessionListReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页获取用户列表,返回包括列表,总数,页码,每页数量",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.PageResult"
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session/ticket": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "购买入场券",
+                "parameters": [
+                    {
+                        "description": "场次ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SessionDetailReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/system.ActivitySession"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/info": {
             "get": {
                 "security": [
                     {
@@ -252,7 +521,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/withdraw-history": {
+        "/api/withdraw/history": {
             "get": {
                 "security": [
                     {
@@ -345,6 +614,27 @@ const docTemplate = `{
                 }
             }
         },
+        "request.PageInfo": {
+            "type": "object",
+            "required": [
+                "page",
+                "pageSize"
+            ],
+            "properties": {
+                "keyword": {
+                    "description": "关键字",
+                    "type": "string"
+                },
+                "page": {
+                    "description": "页码",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页大小",
+                    "type": "integer"
+                }
+            }
+        },
         "request.Register": {
             "type": "object",
             "required": [
@@ -366,6 +656,43 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "request.SessionDetailReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.SessionListReq": {
+            "type": "object",
+            "required": [
+                "page",
+                "pageSize",
+                "type"
+            ],
+            "properties": {
+                "keyword": {
+                    "description": "关键字",
+                    "type": "string"
+                },
+                "page": {
+                    "description": "页码",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页大小",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "1:hight bonus 2:hight rate 3:hot\"",
+                    "type": "integer"
                 }
             }
         },
@@ -430,6 +757,38 @@ const docTemplate = `{
                 },
                 "userName": {
                     "type": "string"
+                }
+            }
+        },
+        "system.ActivitySession": {
+            "type": "object",
+            "properties": {
+                "activityBonus": {
+                    "type": "integer"
+                },
+                "activityId": {
+                    "type": "integer"
+                },
+                "activityLimitCount": {
+                    "type": "integer"
+                },
+                "activityName": {
+                    "type": "string"
+                },
+                "activitySpend": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "openTime": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "uids": {
+                    "type": "integer"
                 }
             }
         }

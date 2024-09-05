@@ -11,8 +11,12 @@ type BaseApiRouter struct {
 
 func (s *BaseApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	var sysUser = v1.ApiGroupSys.SysUserApi
+	var session = v1.ApiGroupSys.SessionApi
 	{
 		Router.POST("/register", sysUser.Register)
 		Router.POST("/login", sysUser.Login)
+		Router.POST("/home/data", session.GetHomeRecommand)
+		Router.POST("/session/list", session.GetSessionList)
+		Router.POST("/session/detail", session.GetSessionById)
 	}
 }

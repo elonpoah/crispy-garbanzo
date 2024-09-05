@@ -20,18 +20,17 @@ type UserService struct{}
 //@param: u *model.SysUser
 //@return: err error, userInter *model.SysUser
 
-func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysUser, err error) {
+func (userService *UserService) Login(u *system.SysUser) (user *system.SysUser, err error) {
 	if nil == global.FPG_DB {
 		return nil, fmt.Errorf("db not init")
 	}
-	var user system.SysUser
 	err = global.FPG_DB.Where("username = ?", u.Username).First(&user).Error
 	if err == nil {
 		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
 			return nil, errors.New("密码错误")
 		}
 	}
-	return &user, err
+	return user, err
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -40,15 +39,14 @@ func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysU
 //@param: u model.SysUser
 //@return: userInter system.SysUser, err error
 
-func (userService *UserService) Register(u system.SysUser) (userInter system.SysUser, err error) {
-	var user system.SysUser
+func (userService *UserService) Register(u system.SysUser) (user *system.SysUser, err error) {
 	if !errors.Is(global.FPG_DB.Where("username = ?", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-		return userInter, errors.New("用户名已注册")
+		return user, errors.New("用户名已注册")
 	}
 	// 密码hash加密 注册
 	u.Password = utils.BcryptHash(u.Password)
 	err = global.FPG_DB.Create(&u).Error
-	return u, err
+	return &u, err
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -78,10 +76,8 @@ func (userService *UserService) ChangePassword(uid int, Password string, newPass
 //@return: userInter *model.SysUser,err error
 
 func (userService *UserService) GetUserInfo(uid int) (userInfo *system.SysUser, err error) {
-	var user system.SysUser
-	err = global.FPG_DB.Where("id = ?", uid).First(&user).Error
-	return &user, err
-
+	err = global.FPG_DB.Where("id = ?", uid).First(&userInfo).Error
+	return userInfo, err
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -90,11 +86,10 @@ func (userService *UserService) GetUserInfo(uid int) (userInfo *system.SysUser, 
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetUserDepositList(info request.UserDepositRecordReq, uid int) (list interface{}, total int64, err error) {
+func (userService *UserService) GetUserDepositList(info request.UserDepositRecordReq, uid int) (list *[]system.Deposit, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.Deposit{}).Where("uid = ?", uid)
-	var dataList []system.Deposit
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }
@@ -102,8 +97,8 @@ func (userService *UserService) GetUserDepositList(info request.UserDepositRecor
 	if err != nil {
 		return
 	}
-	err = db.Limit(limit).Offset(offset).Find(&dataList).Error
-	return dataList, total, err
+	err = db.Limit(limit).Offset(offset).Find(&list).Error
+	return list, total, err
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -112,11 +107,10 @@ func (userService *UserService) GetUserDepositList(info request.UserDepositRecor
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRecordReq, uid int) (list interface{}, total int64, err error) {
+func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRecordReq, uid int) (list *[]system.Withdrawal, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.Withdrawal{}).Where("uid = ?", uid)
-	var dataList []system.Withdrawal
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }
@@ -124,6 +118,6 @@ func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRec
 	if err != nil {
 		return
 	}
-	err = db.Limit(limit).Offset(offset).Find(&dataList).Error
-	return dataList, total, err
+	err = db.Limit(limit).Offset(offset).Find(&list).Error
+	return list, total, err
 }

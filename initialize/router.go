@@ -32,6 +32,7 @@ func Routers() *gin.Engine {
 	PrivateGroup.Use(middleware.JWTAuth())
 	{
 		router.AppRouterGroup.UserApiRouter.InitApiRouter(PrivateGroup)
+		router.AppRouterGroup.SessionApiRouter.InitApiRouter(PrivateGroup)
 	}
 	// swagger；注意：生产环境可以注释掉
 	if global.FPG_CONFIG.Application.Mode != "prod" {

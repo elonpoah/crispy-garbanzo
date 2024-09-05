@@ -102,7 +102,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 // @Produce  application/json
 // @Param     data  body      systemReq.ChangePasswordReq    true  "原密码, 新密码"
 // @Success   200   {object}  response.Response{msg=string}  "用户修改密码"
-// @Router    /api/change_password [post]
+// @Router    /api/change/password [post]
 func (b *SysUserApi) ChangePassword(c *gin.Context) {
 	var req systemReq.ChangePasswordReq
 	err := c.ShouldBindJSON(&req)
@@ -135,7 +135,7 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 // @Security  ApiKeyAuth
 // @Produce  application/json
 // @Success   200   {object}  response.Response{data=systemRes.LoginResponse, msg=string}  "返回包括用户信息"
-// @Router    /api/user_info [get]
+// @Router    /api/user/info [get]
 func (b *SysUserApi) GetUserInfo(c *gin.Context) {
 	uid, err := utils.GetUserID(c)
 	if err != nil {
@@ -167,7 +167,7 @@ func (b *SysUserApi) GetUserInfo(c *gin.Context) {
 // @Produce   application/json
 // @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
 // @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
-// @Router    /api/deposit-history [get]
+// @Router    /api/deposit/history [get]
 func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
 	var pageInfo systemReq.UserDepositRecordReq
 	err := c.ShouldBindQuery(&pageInfo)
@@ -206,7 +206,7 @@ func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
 // @Produce   application/json
 // @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
 // @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
-// @Router    /api/withdraw-history [get]
+// @Router    /api/withdraw/history [get]
 func (b *SysUserApi) GetUserWithdrawList(c *gin.Context) {
 	var pageInfo systemReq.UserWithdrawRecordReq
 	err := c.ShouldBindQuery(&pageInfo)
