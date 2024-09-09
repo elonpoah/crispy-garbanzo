@@ -15,5 +15,6 @@ func (s *SessionApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 		Router.POST("/session/ticket", sysUser.BuySessionTicket)
 		Router.POST("/session/check", sysUser.CheckSession)
 		Router.POST("/game/history", sysUser.GetGameHistory)
+		Router.GET("/session/summary", sysUser.GetUserSummary)
 	}
 }

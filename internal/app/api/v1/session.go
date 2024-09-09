@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"crispy-garbanzo/common/request"
 	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
 	systemReq "crispy-garbanzo/internal/app/models/request"
@@ -149,11 +148,12 @@ func (b *SessionApi) GetSessionList(c *gin.Context) {
 // @Tags      活动中心
 // @Summary   抽奖记录
 // @Produce   application/json
-// @Param     data  body      request.PageInfo                                        true  "页码, 每页大小"
+// @Param     data  body      systemReq.GameHistoryReq                                        true  "页码, 每页大小"
 // @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
 // @Router    /api/game/history [post]
 func (b *SessionApi) GetGameHistory(c *gin.Context) {
-	var req request.PageInfo
+	var req systemReq.GameHistoryReq
+	req.Status = -1
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -181,4 +181,26 @@ func (b *SessionApi) GetGameHistory(c *gin.Context) {
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}, "获取成功", c)
+}
+
+// GetUserSummary
+// @Tags      活动中心
+// @Summary   活动统计
+// @Security  ApiKeyAuth
+// @Produce  application/json
+// @Success   200   {object}  response.Response{data=response.UserSummaryResponse, msg=string}  "返回包括用户信息"
+// @Router    /api/session/summary [get]
+func (b *SessionApi) GetUserSummary(c *gin.Context) {
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result, err := service.ServiceGroupSys.GetUserSummary(uid)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(result, "获取成功", c)
 }

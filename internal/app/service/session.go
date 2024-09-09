@@ -1,10 +1,10 @@
 package service
 
 import (
-	"crispy-garbanzo/common/request"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
 	systemReq "crispy-garbanzo/internal/app/models/request"
+	systemRes "crispy-garbanzo/internal/app/models/response"
 	"errors"
 	"time"
 
@@ -187,17 +187,34 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: GetGameHistory
 //@description: 分页获取数据
-//@param: info request.PageInfo
+//@param: info systemReq.GameHistoryReq
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetGameHistory(info request.PageInfo, uid int) (list *[]system.GameRecord, total int64, err error) {
-	limit := info.PageSize
-	offset := info.PageSize * (info.Page - 1)
+func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid int) (list *[]system.GameRecord, total int64, err error) {
+	limit := req.PageSize
+	offset := req.PageSize * (req.Page - 1)
 	db := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ?", uid).Order("created_at ASC")
+	if req.Status != -1 {
+		db = db.Where("status = ?", req.Status)
+	}
 	err = db.Count(&total).Error
 	if err != nil {
 		return
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
 	return list, total, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: GetUserSummary
+//@description: 汇总
+//@param: info systemReq.GameHistoryReq
+//@return: result systemRes.UserSummaryResponse err error
+
+func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSummaryResponse, err error) {
+	result.FreeCount = 0
+	var SessionCount int64
+	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ?", uid, 0).Count(&SessionCount).Error
+	result.SessionCount = SessionCount
+	return result, err
 }

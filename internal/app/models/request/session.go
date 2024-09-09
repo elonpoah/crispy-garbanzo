@@ -12,3 +12,8 @@ type SessionListReq struct {
 	request.PageInfo
 	Type int `json:"type" binding:"required" ` // 1:hight bonus 2:hight rate 3:hot"
 }
+
+type GameHistoryReq struct {
+	request.PageInfo
+	Status int8 `json:"status"`
+}
