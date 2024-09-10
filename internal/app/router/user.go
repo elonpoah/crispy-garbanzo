@@ -14,6 +14,8 @@ func (s *UserApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 	{
 		Router.POST("/change_password", sysUser.ChangePassword)
 		Router.GET("/user/info", sysUser.GetUserInfo)
+		Router.POST("/user/withdraw", sysUser.Withdraw)
+		Router.POST("/user/deposit", sysUser.Deposit)
 		Router.GET("/deposit/history", sysUser.GetUserDepositList)
 		Router.GET("/withdraw/history", sysUser.GetUserWithdrawList)
 	}

@@ -165,7 +165,7 @@ func (b *SysUserApi) GetUserInfo(c *gin.Context) {
 // @Summary   充值记录
 // @Security  ApiKeyAuth
 // @Produce   application/json
-// @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
+// @Param     data  query      systemReq.UserDepositRecordReq                                        true  "页码, 每页大小"
 // @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
 // @Router    /api/deposit/history [get]
 func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
@@ -197,6 +197,66 @@ func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
 	}, "获取成功", c)
+}
+
+// Deposit
+// @Tags      用户中心
+// @Summary   充值
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     data  body     systemReq.UserDepositReq                                        true  "参数"
+// @Success   200   {object}  response.Response{data=interface{},msg=string}  "获取地址"
+// @Router    /api/user/deposit [post]
+func (b *SysUserApi) Deposit(c *gin.Context) {
+	var req systemReq.UserDepositReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	req.Uid = uid
+	result, err := service.ServiceGroupSys.Deposit(req)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(result, "获取成功", c)
+}
+
+// Withdraw
+// @Tags      用户中心
+// @Summary   提现
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     data  body     systemReq.UserWithdrawReq                                        true  "参数"
+// @Success   200   {object}  response.Response{data=interface{},msg=string}  "获取地址"
+// @Router    /api/user/withdraw [post]
+func (b *SysUserApi) Withdraw(c *gin.Context) {
+	var req systemReq.UserWithdrawReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	req.Uid = uid
+	err = service.ServiceGroupSys.Withdraw(req)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithMessage("获取成功", c)
 }
 
 // GetUserWithdrawList

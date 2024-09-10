@@ -102,6 +102,50 @@ func (userService *UserService) GetUserDepositList(info request.UserDepositRecor
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
+//@function: Deposit
+//@description: 分页获取数据
+//@param: info request.UserDepositRecordReq
+//@return: address string, err error
+
+func (userService *UserService) Deposit(req request.UserDepositReq) (address string, err error) {
+	var record system.WalletAddress
+	err = global.FPG_DB.Where("uid = ? AND type = ?", req.Uid, req.Type).First(&record).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = global.FPG_DB.Where("enable = ? AND status = ? AND type = ?", 1, 0, req.Type).First(&record).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return address, errors.New("通道拥挤中，稍后再试")
+		} else if err != nil {
+			return address, errors.New("系统异常，稍后再试")
+		}
+		record.Status = 1
+		record.Uid = req.Uid
+		err = global.FPG_DB.Save(&record).Error
+
+		return record.Address, err
+	} else {
+		return record.Address, err
+	}
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: Deposit
+//@description: 分页获取数据
+//@param: info request.UserWithdrawReq
+//@return: address string, err error
+
+func (userService *UserService) Withdraw(req request.UserWithdrawReq) (err error) {
+	withdraw := system.Withdrawal{
+		Uid:       req.Uid,
+		Username:  req.Username,
+		Type:      req.Type,
+		Amount:    req.Amount,
+		ToAddress: req.Address,
+	}
+	err = global.FPG_DB.Create(&withdraw).Error
+	return err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
 //@function: GetUserWithdrawList
 //@description: 分页获取数据
 //@param: info request.PageInfo

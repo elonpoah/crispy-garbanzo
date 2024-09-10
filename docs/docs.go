@@ -139,7 +139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.PageInfo"
+                            "$ref": "#/definitions/request.GameHistoryReq"
                         }
                     }
                 ],
@@ -432,6 +432,45 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/session/summary": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "活动统计",
+                "responses": {
+                    "200": {
+                        "description": "返回包括用户信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/response.UserSummaryResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/session/ticket": {
             "post": {
                 "security": [
@@ -482,6 +521,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/user/deposit": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户中心"
+                ],
+                "summary": "充值",
+                "parameters": [
+                    {
+                        "description": "参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UserDepositReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取地址",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/user/info": {
             "get": {
                 "security": [
@@ -512,6 +601,56 @@ const docTemplate = `{
                                         },
                                         "data": {
                                             "$ref": "#/definitions/response.LoginResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/user/withdraw": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户中心"
+                ],
+                "summary": "提现",
+                "parameters": [
+                    {
+                        "description": "参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UserWithdrawReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取地址",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object"
+                                        },
+                                        "msg": {
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -597,24 +736,7 @@ const docTemplate = `{
                 }
             }
         },
-        "request.Login": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "description": "密码",
-                    "type": "string"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
-                }
-            }
-        },
-        "request.PageInfo": {
+        "request.GameHistoryReq": {
             "type": "object",
             "required": [
                 "page",
@@ -632,6 +754,26 @@ const docTemplate = `{
                 "pageSize": {
                     "description": "每页大小",
                     "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.Login": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },
@@ -696,6 +838,54 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UserDepositReq": {
+            "type": "object",
+            "required": [
+                "amount",
+                "type"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "type": {
+                    "description": "2 trc20 1 erc20",
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.UserWithdrawReq": {
+            "type": "object",
+            "required": [
+                "address",
+                "amount",
+                "type"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "type": {
+                    "description": "2 trc20 1 erc20",
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
         "response.LoginResponse": {
             "type": "object",
             "properties": {
@@ -757,6 +947,17 @@ const docTemplate = `{
                 },
                 "userName": {
                     "type": "string"
+                }
+            }
+        },
+        "response.UserSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "freeCount": {
+                    "type": "integer"
+                },
+                "sessionCount": {
+                    "type": "integer"
                 }
             }
         },

@@ -8,6 +8,23 @@ definitions:
         description: 密码
         type: string
     type: object
+  request.GameHistoryReq:
+    properties:
+      keyword:
+        description: 关键字
+        type: string
+      page:
+        description: 页码
+        type: integer
+      pageSize:
+        description: 每页大小
+        type: integer
+      status:
+        type: integer
+    required:
+    - page
+    - pageSize
+    type: object
   request.Login:
     properties:
       password:
@@ -19,21 +36,6 @@ definitions:
     required:
     - password
     - username
-    type: object
-  request.PageInfo:
-    properties:
-      keyword:
-        description: 关键字
-        type: string
-      page:
-        description: 页码
-        type: integer
-      pageSize:
-        description: 每页大小
-        type: integer
-    required:
-    - page
-    - pageSize
     type: object
   request.Register:
     properties:
@@ -77,6 +79,39 @@ definitions:
     - pageSize
     - type
     type: object
+  request.UserDepositReq:
+    properties:
+      amount:
+        type: number
+      type:
+        description: 2 trc20 1 erc20
+        type: integer
+      uid:
+        type: integer
+      userName:
+        type: string
+    required:
+    - amount
+    - type
+    type: object
+  request.UserWithdrawReq:
+    properties:
+      address:
+        type: string
+      amount:
+        type: number
+      type:
+        description: 2 trc20 1 erc20
+        type: integer
+      uid:
+        type: integer
+      userName:
+        type: string
+    required:
+    - address
+    - amount
+    - type
+    type: object
   response.LoginResponse:
     properties:
       token:
@@ -118,6 +153,13 @@ definitions:
         type: integer
       userName:
         type: string
+    type: object
+  response.UserSummaryResponse:
+    properties:
+      freeCount:
+        type: integer
+      sessionCount:
+        type: integer
     type: object
   system.ActivitySession:
     properties:
@@ -213,7 +255,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/request.PageInfo'
+          $ref: '#/definitions/request.GameHistoryReq'
       produces:
       - application/json
       responses:
@@ -382,6 +424,27 @@ paths:
       summary: 场次列表
       tags:
       - 活动中心
+  /api/session/summary:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回包括用户信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  $ref: '#/definitions/response.UserSummaryResponse'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 活动统计
+      tags:
+      - 活动中心
   /api/session/ticket:
     post:
       parameters:
@@ -410,6 +473,34 @@ paths:
       summary: 购买入场券
       tags:
       - 活动中心
+  /api/user/deposit:
+    post:
+      parameters:
+      - description: 参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserDepositReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 充值
+      tags:
+      - 用户中心
   /api/user/info:
     get:
       produces:
@@ -429,6 +520,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 用户信息
+      tags:
+      - 用户中心
+  /api/user/withdraw:
+    post:
+      parameters:
+      - description: 参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserWithdrawReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取地址
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: object
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 提现
       tags:
       - 用户中心
   /api/withdraw/history:

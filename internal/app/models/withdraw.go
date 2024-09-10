@@ -6,14 +6,14 @@ import (
 
 type Withdrawal struct {
 	global.Model
-	Uid         string  `json:"uid"`
+	Uid         int     `json:"uid"`
 	Username    string  `json:"userName"`
-	Type        int     `gorm:"type:tinyint"` //0 trc20 1 erc20
-	Amount      float64 `gorm:"type:decimal(12,2)"`
+	Type        int     `json:"type" gorm:"type:tinyint"` //2 trc20 1 erc20
+	Amount      float64 `json:"amount" gorm:"type:decimal(12,2)"`
 	FromAddress string  `json:"fromAddress"`
 	ToAddress   string  `json:"toAddress"`
-	TxHash      string  `gorm:"unique"`
-	Status      string  `gorm:"type:tinyint unsigned;default:0"` // 0 待确认 1 成功 2 失败
+	TxHash      string  `json:"txHash" gorm:"unique"`
+	Status      string  `json:"ttatus" gorm:"type:tinyint unsigned;default:0"` // 0 待确认 1 成功 2 失败
 }
 
 func (Withdrawal) TableName() string {

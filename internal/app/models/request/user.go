@@ -30,6 +30,21 @@ type UserDepositRecordReq struct {
 	// system.Deposit
 }
 
+type UserDepositReq struct {
+	Uid      int     `json:"uid"`
+	Username string  `json:"userName"`
+	Type     int     `json:"type" binding:"required"` //2 trc20 1 erc20
+	Amount   float64 `json:"amount" binding:"required"`
+}
+
+type UserWithdrawReq struct {
+	Uid      int     `json:"uid"`
+	Username string  `json:"userName"`
+	Type     int     `json:"type" binding:"required"` //2 trc20 1 erc20
+	Amount   float64 `json:"amount" binding:"required"`
+	Address  string  `json:"address" binding:"required"`
+}
+
 type UserWithdrawRecordReq struct {
 	request.PageInfo
 	// system.Deposit
