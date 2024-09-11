@@ -153,7 +153,6 @@ func (b *SessionApi) GetSessionList(c *gin.Context) {
 // @Router    /api/game/history [post]
 func (b *SessionApi) GetGameHistory(c *gin.Context) {
 	var req systemReq.GameHistoryReq
-	req.Status = -1
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)

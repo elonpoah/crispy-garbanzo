@@ -28,7 +28,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 
 	// 按 uids 从多到少排序，取前 10 条
 	err = global.FPG_DB.
-		Where("status = ? AND open_time > ?", 0, now).
+		Where("status = ? AND open_time > ?", 1, now).
 		Order("uids DESC,open_time ASC").
 		Limit(10).
 		Find(&hotSessions).Error
@@ -38,7 +38,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 
 	// 按 ActivytyBonus 从大到小排序，取前 10 条
 	err = global.FPG_DB.
-		Where("status = ? AND open_time > ?", 0, now).
+		Where("status = ? AND open_time > ?", 1, now).
 		Order("activyty_bonus DESC,open_time ASC").
 		Limit(10).
 		Find(&hugeBonusSessions).Error
@@ -47,8 +47,8 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 	}
 
 	err = global.FPG_DB.
-		Where("status = ? AND open_time > ?", 0, now).
-		Order("activyty_bonus / activyty_limit_count DESC").
+		Where("status = ? AND open_time > ?", 1, now).
+		Order("activyty_limit_count ASC").
 		Limit(10).
 		Find(&highTwRateSessions).Error
 	if err != nil {
@@ -70,7 +70,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 //@description: 活动场次详情
 //@return: result system.ActivitySession,err error
 
-func (SessionService *SessionService) GetSessionById(id int) (session *system.ActivitySession, err error) {
+func (SessionService *SessionService) GetSessionById(id uint) (session *system.ActivitySession, err error) {
 	err = global.FPG_DB.Where("id = ?", id).First(&session).Error
 	return session, err
 }
@@ -80,10 +80,10 @@ func (SessionService *SessionService) GetSessionById(id int) (session *system.Ac
 //@description: 活动场次详情
 //@return: result system.ActivitySession,err error
 
-func (SessionService *SessionService) BuySessionTicket(id int, uid int) (err error) {
+func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (err error) {
 	now := time.Now().Unix() * 1000
 	var session system.ActivitySession
-	err = global.FPG_DB.Where("status = ? AND open_time > ? AND id = ?", 0, now, id).First(&session).Error
+	err = global.FPG_DB.Where("status = ? AND open_time > ? AND id = ?", 1, now, id).First(&session).Error
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (SessionService *SessionService) BuySessionTicket(id int, uid int) (err err
 		ActivytyLimitCount: session.ActivytyLimitCount,
 		OpenTime:           session.OpenTime,
 		Uids:               session.Uids,
-		Status:             session.Status,
+		Status:             1,
 	}
 	err = global.FPG_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Save(&user).Error; err != nil {
@@ -140,14 +140,14 @@ func (SessionService *SessionService) BuySessionTicket(id int, uid int) (err err
 //@description: 活动场次详情
 //@return: isGot bool,err error
 
-func (SessionService *SessionService) CheckSession(id int, uid int) (isGot bool, err error) {
+func (SessionService *SessionService) CheckSession(id uint, uid int) (isGot bool, err error) {
 	var record system.GameRecord
 	err = global.FPG_DB.Where("session_id = ? AND uid = ?", id, uid).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		isGot = false
 		return isGot, nil
 	}
-	if record.ID > -1 {
+	if record.ID > 0 {
 		isGot = true
 	} else {
 		isGot = false
@@ -166,7 +166,7 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 	offset := info.PageSize * (info.Page - 1)
 	// 当前时间戳
 	now := time.Now().Unix() * 1000
-	db := global.FPG_DB.Model(&system.ActivitySession{}).Where("status = ? AND open_time > ?", 0, now)
+	db := global.FPG_DB.Model(&system.ActivitySession{}).Where("status = ? AND open_time > ?", 1, now)
 	if info.Type == 1 {
 		db = db.Order("activyty_bonus DESC,open_time ASC")
 	}
@@ -194,7 +194,7 @@ func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid
 	limit := req.PageSize
 	offset := req.PageSize * (req.Page - 1)
 	db := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ?", uid).Order("created_at ASC")
-	if req.Status != -1 {
+	if req.Status != 0 {
 		db = db.Where("status = ?", req.Status)
 	}
 	err = db.Count(&total).Error
@@ -212,9 +212,17 @@ func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid
 //@return: result systemRes.UserSummaryResponse err error
 
 func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSummaryResponse, err error) {
-	result.FreeCount = 0
+	var FreeCount int64
 	var SessionCount int64
-	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ?", uid, 0).Count(&SessionCount).Error
+	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ?", uid, 1).Count(&SessionCount).Error
+	if err != nil {
+		return
+	}
+	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ? AND activyty_spend = ?", uid, 1, 0).Count(&FreeCount).Error
+	if err != nil {
+		return
+	}
 	result.SessionCount = SessionCount
+	result.FreeCount = 0
 	return result, err
 }

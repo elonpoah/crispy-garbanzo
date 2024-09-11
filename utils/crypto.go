@@ -19,7 +19,7 @@ type JwtClaims struct {
 	Exp int64  `json:"exp"`
 }
 
-func CreateToken(aid int, src string, key string, exp int) string {
+func CreateToken(aid uint, src string, key string, exp int) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"aid": aid,
 		"src": src,

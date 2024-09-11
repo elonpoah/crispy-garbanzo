@@ -5,7 +5,7 @@ import (
 )
 
 type SessionDetailReq struct {
-	Id int `json:"id" binding:"required"`
+	Id uint `json:"id" binding:"required"`
 }
 
 type SessionListReq struct {
@@ -15,5 +15,5 @@ type SessionListReq struct {
 
 type GameHistoryReq struct {
 	request.PageInfo
-	Status int8 `json:"status"`
+	Status uint `json:"status"`
 }

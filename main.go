@@ -24,7 +24,7 @@ func init() {
 func main() {
 	// 程序结束前关闭数据链接
 	if global.FPG_DB != nil {
-		initialize.RegisterTables() // 初始化表
+		// initialize.RegisterTables() // 初始化表
 		db, _ := global.FPG_DB.DB()
 		defer db.Close()
 	}
