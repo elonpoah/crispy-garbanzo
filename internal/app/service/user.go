@@ -2,12 +2,12 @@ package service
 
 import (
 	commonReq "crispy-garbanzo/common/request"
+	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
 	"crispy-garbanzo/internal/app/models/request"
 	"crispy-garbanzo/utils"
 	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -21,17 +21,20 @@ type UserService struct{}
 //@param: u *model.SysUser
 //@return: err error, userInter *model.SysUser
 
-func (userService *UserService) Login(u *system.SysUser) (user *system.SysUser, err error) {
+func (userService *UserService) Login(u *system.SysUser) (user *system.SysUser, errCode int) {
 	if nil == global.FPG_DB {
-		return nil, fmt.Errorf("db not init")
+		return nil, response.InternalServerError
 	}
-	err = global.FPG_DB.Where("username = ?", u.Username).First(&user).Error
+	err := global.FPG_DB.Where("username = ?", u.Username).First(&user).Error
 	if err == nil {
 		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
-			return nil, errors.New("密码错误")
+			return nil, response.PasswordError
 		}
 	}
-	return user, err
+	if err != nil {
+		return nil, response.UserNotFound
+	}
+	return user, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -40,14 +43,17 @@ func (userService *UserService) Login(u *system.SysUser) (user *system.SysUser, 
 //@param: u model.SysUser
 //@return: userInter system.SysUser, err error
 
-func (userService *UserService) Register(u system.SysUser) (user *system.SysUser, err error) {
+func (userService *UserService) Register(u system.SysUser) (user *system.SysUser, errCode int) {
 	if !errors.Is(global.FPG_DB.Where("username = ?", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-		return user, errors.New("用户名已注册")
+		return user, response.UserNameAlready
 	}
 	// 密码hash加密 注册
 	u.Password = utils.BcryptHash(u.Password)
-	err = global.FPG_DB.Create(&u).Error
-	return &u, err
+	err := global.FPG_DB.Create(&u).Error
+	if err != nil {
+		return nil, response.InternalServerError
+	}
+	return &u, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -56,17 +62,23 @@ func (userService *UserService) Register(u system.SysUser) (user *system.SysUser
 //@param: u *model.SysUser, newPassword string
 //@return: userInter *model.SysUser,err error
 
-func (userService *UserService) ChangePassword(uid int, Password string, newPassword string) (err error) {
+func (userService *UserService) ChangePassword(uid int, Password string, newPassword string) (errCode int) {
 	var user system.SysUser
-	err = global.FPG_DB.Where("id = ?", uid).First(&user).Error
+	err := global.FPG_DB.Where("id = ?", uid).First(&user).Error
 	if err == nil {
 		if ok := utils.BcryptCheck(Password, user.Password); !ok {
-			return errors.New("原密码错误")
+			return response.OldPasswordError
 		}
+	}
+	if err != nil {
+		return response.InternalServerError
 	}
 	user.Password = utils.BcryptHash(newPassword)
 	err = global.FPG_DB.Save(&user).Error
-	return err
+	if err != nil {
+		return response.InternalServerError
+	}
+	return response.SUCCESS
 
 }
 
@@ -76,9 +88,12 @@ func (userService *UserService) ChangePassword(uid int, Password string, newPass
 //@param: u *model.SysUser
 //@return: userInter *model.SysUser,err error
 
-func (userService *UserService) GetUserInfo(uid int) (userInfo *system.SysUser, err error) {
-	err = global.FPG_DB.Where("id = ?", uid).First(&userInfo).Error
-	return userInfo, err
+func (userService *UserService) GetUserInfo(uid int) (userInfo *system.SysUser, errCode int) {
+	err := global.FPG_DB.Where("id = ?", uid).First(&userInfo).Error
+	if err != nil {
+		return userInfo, response.InternalServerError
+	}
+	return userInfo, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -87,19 +102,22 @@ func (userService *UserService) GetUserInfo(uid int) (userInfo *system.SysUser, 
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetUserDepositList(info request.UserDepositRecordReq, uid int) (list *[]system.Deposit, total int64, err error) {
+func (userService *UserService) GetUserDepositList(info request.UserDepositRecordReq, uid int) (list *[]system.Deposit, total int64, errCode int) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.Deposit{}).Where("uid = ?", uid)
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }
-	err = db.Count(&total).Error
+	err := db.Count(&total).Error
 	if err != nil {
-		return
+		return list, total, response.InternalServerError
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
-	return list, total, err
+	if err != nil {
+		return list, total, response.InternalServerError
+	}
+	return list, total, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -108,23 +126,25 @@ func (userService *UserService) GetUserDepositList(info request.UserDepositRecor
 //@param: info request.UserDepositRecordReq
 //@return: address string, err error
 
-func (userService *UserService) Deposit(req request.UserDepositReq) (address string, err error) {
+func (userService *UserService) Deposit(req request.UserDepositReq) (address string, errCode int) {
 	var record system.WalletAddress
-	err = global.FPG_DB.Where("uid = ? AND type = ?", req.Uid, req.Type).First(&record).Error
+	err := global.FPG_DB.Where("uid = ? AND type = ?", req.Uid, req.Type).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = global.FPG_DB.Where("enable = ? AND status = ? AND type = ?", 1, 0, req.Type).First(&record).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return address, errors.New("通道拥挤中，稍后再试")
+			return address, response.ChannelCrowded
 		} else if err != nil {
-			return address, errors.New("系统异常，稍后再试")
+			return address, response.InternalServerError
 		}
 		record.Status = 1
 		record.Uid = req.Uid
 		err = global.FPG_DB.Save(&record).Error
-
-		return record.Address, err
+		if err != nil {
+			return address, response.InternalServerError
+		}
+		return record.Address, response.SUCCESS
 	} else {
-		return record.Address, err
+		return record.Address, response.SUCCESS
 	}
 }
 
@@ -134,7 +154,7 @@ func (userService *UserService) Deposit(req request.UserDepositReq) (address str
 //@param: info request.UserWithdrawReq
 //@return: address string, err error
 
-func (userService *UserService) Withdraw(req request.UserWithdrawReq) (err error) {
+func (userService *UserService) Withdraw(req request.UserWithdrawReq) (errCode int) {
 	withdraw := system.Withdrawal{
 		Uid:       req.Uid,
 		Username:  req.Username,
@@ -142,8 +162,11 @@ func (userService *UserService) Withdraw(req request.UserWithdrawReq) (err error
 		Amount:    req.Amount,
 		ToAddress: req.Address,
 	}
-	err = global.FPG_DB.Create(&withdraw).Error
-	return err
+	err := global.FPG_DB.Create(&withdraw).Error
+	if err != nil {
+		return response.InternalServerError
+	}
+	return response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -152,19 +175,22 @@ func (userService *UserService) Withdraw(req request.UserWithdrawReq) (err error
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRecordReq, uid int) (list *[]system.Withdrawal, total int64, err error) {
+func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRecordReq, uid int) (list *[]system.Withdrawal, total int64, errCode int) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.Withdrawal{}).Where("uid = ?", uid)
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }
-	err = db.Count(&total).Error
+	err := db.Count(&total).Error
 	if err != nil {
-		return
+		return list, total, response.InternalServerError
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
-	return list, total, err
+	if err != nil {
+		return list, total, response.InternalServerError
+	}
+	return list, total, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -173,17 +199,20 @@ func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRec
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetUserFreeSpinList(info commonReq.PageInfo, uid int) (list *[]system.InviteDuty, total int64, err error) {
+func (userService *UserService) GetUserFreeSpinList(info commonReq.PageInfo, uid int) (list *[]system.InviteDuty, total int64, errCode int) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.InviteDuty{}).Where("uid = ?", uid)
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }
-	err = db.Count(&total).Error
+	err := db.Count(&total).Error
 	if err != nil {
-		return
+		return list, total, response.InternalServerError
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
-	return list, total, err
+	if err != nil {
+		return list, total, response.InternalServerError
+	}
+	return list, total, response.SUCCESS
 }

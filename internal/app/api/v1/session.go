@@ -2,14 +2,12 @@ package v1
 
 import (
 	"crispy-garbanzo/common/response"
-	"crispy-garbanzo/global"
 	systemReq "crispy-garbanzo/internal/app/models/request"
 	"crispy-garbanzo/internal/app/service"
 
 	"crispy-garbanzo/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type SessionApi struct{}
@@ -21,13 +19,12 @@ type SessionApi struct{}
 // @Success   200   {object}  response.Response{data=system.ActivitySession, msg=string}
 // @Router    /api/home/recommand [post]
 func (b *SessionApi) GetHomeRecommand(c *gin.Context) {
-	result, err := service.ServiceGroupSys.GetHomeRecommand()
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.GetHomeRecommand()
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "获取成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // GetSessionById
@@ -41,16 +38,15 @@ func (b *SessionApi) GetSessionById(c *gin.Context) {
 	var req systemReq.SessionDetailReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
-	result, err := service.ServiceGroupSys.GetSessionById(req.Id)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.GetSessionById(req.Id)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "获取成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // BuySessionTicket
@@ -65,21 +61,20 @@ func (b *SessionApi) BuySessionTicket(c *gin.Context) {
 	var req systemReq.SessionDetailReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	err = service.ServiceGroupSys.BuySessionTicket(req.Id, uid)
-	if err != nil {
-		global.FPG_LOG.Error("购买失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	errCode := service.ServiceGroupSys.BuySessionTicket(req.Id, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithMessage("成功", c)
+	response.Ok(c)
 }
 
 // CheckSession
@@ -94,21 +89,20 @@ func (b *SessionApi) CheckSession(c *gin.Context) {
 	var req systemReq.SessionDetailReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	result, err := service.ServiceGroupSys.CheckSession(req.Id, uid)
-	if err != nil {
-		global.FPG_LOG.Error("查询场次失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.CheckSession(req.Id, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // GetSessionList
@@ -122,18 +116,17 @@ func (b *SessionApi) GetSessionList(c *gin.Context) {
 	var req systemReq.SessionListReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(req, utils.PageInfoVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
-	list, total, err := service.ServiceGroupSys.GetSessionList(req)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	list, total, errCode := service.ServiceGroupSys.GetSessionList(req)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -141,7 +134,7 @@ func (b *SessionApi) GetSessionList(c *gin.Context) {
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
-	}, "获取成功", c)
+	}, response.SUCCESS, c)
 }
 
 // GetGameHistory
@@ -155,23 +148,22 @@ func (b *SessionApi) GetGameHistory(c *gin.Context) {
 	var req systemReq.GameHistoryReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(req, utils.PageInfoVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	list, total, err := service.ServiceGroupSys.GetGameHistory(req, uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	list, total, errCode := service.ServiceGroupSys.GetGameHistory(req, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -179,7 +171,7 @@ func (b *SessionApi) GetGameHistory(c *gin.Context) {
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
-	}, "获取成功", c)
+	}, response.SUCCESS, c)
 }
 
 // GetUserSummary
@@ -192,16 +184,15 @@ func (b *SessionApi) GetGameHistory(c *gin.Context) {
 func (b *SessionApi) GetUserSummary(c *gin.Context) {
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	result, err := service.ServiceGroupSys.GetUserSummary(uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.GetUserSummary(uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "获取成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // CheckInviteDuty
@@ -216,21 +207,20 @@ func (b *SessionApi) CheckInviteDuty(c *gin.Context) {
 	var req systemReq.CheckInviteDutyReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	result, err := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
-	if err != nil {
-		global.FPG_LOG.Error("系统错误!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // StartInviteSpin
@@ -245,49 +235,44 @@ func (b *SessionApi) StartInviteSpin(c *gin.Context) {
 	var req systemReq.CheckInviteDutyReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	result, err := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
-	if err != nil {
-		global.FPG_LOG.Error("系统错误!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	if req.Type == 1 && result.Registrations >= 1 && result.Participates >= 1 {
-		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if err != nil {
-			global.FPG_LOG.Error("系统错误!", zap.Error(err))
-			response.FailWithMessage(err.Error(), c)
+		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if errCode != response.SUCCESS {
+			response.FailWithMessage(errCode, c)
 			return
 		}
-		response.OkWithDetailed(bonus, "成功", c)
+		response.OkWithDetailed(bonus, response.SUCCESS, c)
 		return
 	}
 	if req.Type == 2 && result.Registrations >= 5 && result.Participates >= 5 {
-		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if err != nil {
-			global.FPG_LOG.Error("系统错误!", zap.Error(err))
-			response.FailWithMessage(err.Error(), c)
+		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if errCode != response.SUCCESS {
+			response.FailWithMessage(errCode, c)
 			return
 		}
-		response.OkWithDetailed(bonus, "成功", c)
+		response.OkWithDetailed(bonus, response.SUCCESS, c)
 	}
 	if req.Type == 3 && result.Registrations >= 18 && result.Participates >= 18 {
-		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if err != nil {
-			global.FPG_LOG.Error("系统错误!", zap.Error(err))
-			response.FailWithMessage(err.Error(), c)
+		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if errCode != response.SUCCESS {
+			response.FailWithMessage(errCode, c)
 			return
 		}
-		response.OkWithDetailed(bonus, "成功", c)
+		response.OkWithDetailed(bonus, response.SUCCESS, c)
 		return
 	}
-	global.FPG_LOG.Error("系统错误!", zap.Error(err))
-	response.FailWithMessage("服务异常，稍后再试", c)
+	response.FailWithMessage(response.NotfoundParameter, c)
 }

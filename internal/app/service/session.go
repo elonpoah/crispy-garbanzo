@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
 	systemReq "crispy-garbanzo/internal/app/models/request"
@@ -20,7 +21,7 @@ type SessionService struct{}
 //@description: 首页推荐
 //@return: result map[string][]system.ActivitySession,err error
 
-func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]system.ActivitySession, err error) {
+func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]system.ActivitySession, errCode int) {
 	// 当前时间戳
 	now := time.Now().Unix() * 1000
 
@@ -29,13 +30,13 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 	var highTwRateSessions []system.ActivitySession
 
 	// 按 uids 从多到少排序，取前 10 条
-	err = global.FPG_DB.
+	err := global.FPG_DB.
 		Where("status = ? AND open_time > ?", 1, now).
 		Order("uids DESC,open_time ASC").
 		Limit(10).
 		Find(&hotSessions).Error
 	if err != nil {
-		return nil, err
+		return nil, response.InternalServerError
 	}
 
 	// 按 ActivytyBonus 从大到小排序，取前 10 条
@@ -45,7 +46,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 		Limit(10).
 		Find(&hugeBonusSessions).Error
 	if err != nil {
-		return nil, err
+		return nil, response.InternalServerError
 	}
 
 	err = global.FPG_DB.
@@ -54,7 +55,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 		Limit(10).
 		Find(&highTwRateSessions).Error
 	if err != nil {
-		return nil, err
+		return nil, response.InternalServerError
 	}
 
 	// 构造返回结果
@@ -64,7 +65,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 		"hightwrate": highTwRateSessions,
 	}
 
-	return result, nil
+	return result, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -72,40 +73,43 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 //@description: 活动场次详情
 //@return: result system.ActivitySession,err error
 
-func (SessionService *SessionService) GetSessionById(id uint) (session *system.ActivitySession, err error) {
-	err = global.FPG_DB.Where("id = ?", id).First(&session).Error
-	return session, err
+func (SessionService *SessionService) GetSessionById(id uint) (session *system.ActivitySession, errCode int) {
+	err := global.FPG_DB.Where("id = ?", id).First(&session).Error
+	if err != nil {
+		return nil, response.InternalServerError
+	}
+	return session, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
-//@function: GetSessionById
+//@function: BuySessionTicket
 //@description: 活动场次详情
 //@return: result system.ActivitySession,err error
 
-func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (err error) {
+func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (errCode int) {
 	now := time.Now().Unix() * 1000
 	var session system.ActivitySession
-	err = global.FPG_DB.Where("status = ? AND open_time > ? AND id = ?", 1, now, id).First(&session).Error
+	err := global.FPG_DB.Where("status = ? AND open_time > ? AND id = ?", 1, now, id).First(&session).Error
 	if err != nil {
-		return err
+		return response.ActivityNotFound
 	}
-	isGot, err := SessionService.CheckSession(id, uid)
-	if err != nil {
-		return err
+	isGot, errCode := SessionService.CheckSession(id, uid)
+	if errCode != response.SUCCESS {
+		return response.InternalServerError
 	}
 	if isGot {
-		return errors.New("请须知，只参加一次")
+		return response.ActivityGetIn
 	}
 	if session.Uids == session.ActivytyLimitCount {
-		return errors.New("当前场次参与人数已满")
+		return response.ActivityFullIn
 	}
 	var user system.SysUser
 	err = global.FPG_DB.Where("id = ?", uid).First(&user).Error
 	if err != nil {
-		return err
+		return response.UserNotFound
 	}
 	if user.Balance < float64(session.ActivytySpend) {
-		return errors.New("余额不足,请充值")
+		return response.BalanceNotEnough
 	}
 	session.Uids += 1
 	user.Balance = user.Balance - float64(session.ActivytySpend)
@@ -134,7 +138,10 @@ func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (err er
 
 		return nil
 	})
-	return err
+	if err != nil {
+		return response.InternalServerError
+	}
+	return response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -142,19 +149,19 @@ func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (err er
 //@description: 活动场次详情
 //@return: isGot bool,err error
 
-func (SessionService *SessionService) CheckSession(id uint, uid int) (isGot bool, err error) {
+func (SessionService *SessionService) CheckSession(id uint, uid int) (isGot bool, errCode int) {
 	var record system.GameRecord
-	err = global.FPG_DB.Where("session_id = ? AND uid = ?", id, uid).First(&record).Error
+	err := global.FPG_DB.Where("session_id = ? AND uid = ?", id, uid).First(&record).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		isGot = false
-		return isGot, nil
+		return isGot, response.SUCCESS
 	}
 	if record.ID > 0 {
 		isGot = true
 	} else {
 		isGot = false
 	}
-	return isGot, err
+	return isGot, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -163,7 +170,7 @@ func (SessionService *SessionService) CheckSession(id uint, uid int) (isGot bool
 //@param: info request.PageInfo
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (list *[]system.ActivitySession, total int64, err error) {
+func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (list *[]system.ActivitySession, total int64, errCode int) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	// 当前时间戳
@@ -178,12 +185,15 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 	if info.Type == 3 {
 		db = db.Order("uids DESC,open_time ASC")
 	}
-	err = db.Count(&total).Error
+	err := db.Count(&total).Error
 	if err != nil {
-		return
+		return list, total, response.InternalServerError
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
-	return list, total, err
+	if err != nil {
+		return list, total, response.InternalServerError
+	}
+	return list, total, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -192,19 +202,24 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 //@param: info systemReq.GameHistoryReq
 //@return: err error, list interface{}, total int64
 
-func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid int) (list *[]system.GameRecord, total int64, err error) {
+func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid int) (list *[]system.GameRecord, total int64, errCode int) {
 	limit := req.PageSize
 	offset := req.PageSize * (req.Page - 1)
 	db := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ?", uid).Order("open_time DESC")
 	if req.Status != 0 {
 		db = db.Where("status = ?", req.Status)
 	}
-	err = db.Count(&total).Error
+	err := db.Count(&total).Error
 	if err != nil {
+		errCode = response.InternalServerError
 		return
 	}
 	err = db.Limit(limit).Offset(offset).Find(&list).Error
-	return list, total, err
+	if err != nil {
+		errCode = response.InternalServerError
+		return
+	}
+	return list, total, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -213,20 +228,23 @@ func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid
 //@param: info systemReq.GameHistoryReq
 //@return: result systemRes.UserSummaryResponse err error
 
-func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSummaryResponse, err error) {
+func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSummaryResponse, errCode int) {
 	var FreeCount int64
 	var SessionCount int64
-	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ?", uid, 1).Count(&SessionCount).Error
+	err := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ?", uid, 1).Count(&SessionCount).Error
 	if err != nil {
+		errCode = response.InternalServerError
 		return
 	}
 	err = global.FPG_DB.Model(&system.InviteDuty{}).Where("uid = ?", uid).Count(&FreeCount).Error
 	if err != nil {
+		errCode = response.InternalServerError
 		return
 	}
 	result.SessionCount = SessionCount
 	result.FreeCount = FreeCount
-	return result, err
+
+	return result, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -234,12 +252,12 @@ func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSu
 //@description: 邀请注册活动
 //@return: result systemRes.InviteSessionResponse,err error
 
-func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result systemRes.InviteSessionResponse, err error) {
+func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result systemRes.InviteSessionResponse, errCode int) {
 	startOfTime, endOfTime := utils.GetTimeRange(rangeType)
 	var userIds []uint
-	err = global.FPG_DB.Model(&system.SysUser{}).Where("pid = ? AND created_at >= ? AND created_at < ?", uid, startOfTime, endOfTime).Pluck("id", &userIds).Error
+	err := global.FPG_DB.Model(&system.SysUser{}).Where("pid = ? AND created_at >= ? AND created_at < ?", uid, startOfTime, endOfTime).Pluck("id", &userIds).Error
 	if err != nil {
-		return result, err
+		return result, response.InternalServerError
 	}
 	result.Registrations = len(userIds)
 	err = global.FPG_DB.Model(&system.GameRecord{}).
@@ -248,10 +266,10 @@ func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result 
 		Group("uid").
 		Count(&result.Participates).Error
 	if err != nil {
-		return result, err
+		return result, response.InternalServerError
 	}
 
-	return result, err
+	return result, response.SUCCESS
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -259,14 +277,15 @@ func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result 
 //@description: 邀请注册活动
 //@return: result int,err error
 
-func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus int, err error) {
+func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus int, errCode int) {
 	var recordLen int64
-	err = global.FPG_DB.Model(&system.InviteDuty{}).Where("type = ? AND uid = ?", rangeType, uid).Count(&recordLen).Error
+	err := global.FPG_DB.Model(&system.InviteDuty{}).Where("type = ? AND uid = ?", rangeType, uid).Count(&recordLen).Error
 	if err != nil {
-		return 0, err
+		errCode = response.InternalServerError
+		return
 	}
 	if recordLen != 0 {
-		return 0, errors.New("已抽奖，请查看抽奖记录")
+		return 0, response.FreeSpinAlreadyJoin
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	if rangeType == 1 {
@@ -274,11 +293,9 @@ func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus i
 	}
 	if rangeType == 2 {
 		bonus = r.Intn(5) + 1 // 0 到 4，加上 1 得到 1 到 5
-		return bonus, err
 	}
 	if rangeType == 3 {
 		bonus = r.Intn(30) + 1 // 0 到 4，加上 1 得到 1 到 30
-		return bonus, err
 	}
 	record := system.InviteDuty{
 		Uid:    uid,
@@ -300,7 +317,7 @@ func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus i
 		return nil
 	})
 	if err != nil {
-		return 0, err
+		return 0, response.InternalServerError
 	}
-	return bonus, err
+	return bonus, response.SUCCESS
 }

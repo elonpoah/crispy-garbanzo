@@ -11,7 +11,6 @@ import (
 	"crispy-garbanzo/utils"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 type SysUserApi struct{}
@@ -28,19 +27,17 @@ func (b *SysUserApi) Login(c *gin.Context) {
 	err := c.ShouldBindJSON(&l)
 
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	u := &system.SysUser{Username: l.Username, Password: l.Password}
-	user, err := service.ServiceGroupSys.Login(u)
-	if err != nil {
-		global.FPG_LOG.Error("登陆失败! 用户名不存在或者密码错误!", zap.Error(err))
-		response.FailWithMessage("用户名不存在或者密码错误", c)
+	user, errCode := service.ServiceGroupSys.Login(u)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	if user.Enable != 1 {
-		global.FPG_LOG.Error("登陆失败! 用户被禁止登录!")
-		response.FailWithMessage("用户被禁止登录", c)
+		response.FailWithMessage(response.UserLoginForbiden, c)
 		return
 	}
 	token := utils.CreateToken(user.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
@@ -57,7 +54,7 @@ func (b *SysUserApi) Login(c *gin.Context) {
 	response.OkWithDetailed(systemRes.LoginResponse{
 		User:  userInfo,
 		Token: token,
-	}, "登录成功", c)
+	}, response.SUCCESS, c)
 }
 
 // Register
@@ -71,14 +68,13 @@ func (b *SysUserApi) Register(c *gin.Context) {
 	var r systemReq.Register
 	err := c.ShouldBindJSON(&r)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	user := &system.SysUser{Username: r.Username, NickName: r.NickName, Password: r.Password, Phone: r.Phone, Email: r.Email, Pid: r.Pid}
-	userReturn, err := service.ServiceGroupSys.Register(*user)
-	if err != nil {
-		global.FPG_LOG.Error("注册失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	userReturn, errCode := service.ServiceGroupSys.Register(*user)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	userInfo := systemRes.SysUserResponse{
@@ -95,7 +91,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 	response.OkWithDetailed(systemRes.LoginResponse{
 		User:  userInfo,
 		Token: token,
-	}, "注册成功", c)
+	}, response.SUCCESS, c)
 }
 
 // ChangePassword
@@ -110,26 +106,25 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 	var req systemReq.ChangePasswordReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(req, utils.ChangePasswordVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InternalServerError, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	err = service.ServiceGroupSys.ChangePassword(uid, req.Password, req.NewPassword)
-	if err != nil {
-		global.FPG_LOG.Error("修改失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	errCode := service.ServiceGroupSys.ChangePassword(uid, req.Password, req.NewPassword)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithMessage("修改成功", c)
+	response.Ok(c)
 }
 
 // GetUserInfo
@@ -142,13 +137,12 @@ func (b *SysUserApi) ChangePassword(c *gin.Context) {
 func (b *SysUserApi) GetUserInfo(c *gin.Context) {
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	userInfo, err := service.ServiceGroupSys.GetUserInfo(uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	userInfo, errCode := service.ServiceGroupSys.GetUserInfo(uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	result := systemRes.SysUserResponse{
@@ -160,7 +154,7 @@ func (b *SysUserApi) GetUserInfo(c *gin.Context) {
 		Balance:       userInfo.Balance,
 		FreezeBalance: userInfo.FreezeBalance,
 	}
-	response.OkWithDetailed(result, "获取成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // GetUserDepositList
@@ -175,23 +169,22 @@ func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
 	var pageInfo systemReq.UserDepositRecordReq
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(pageInfo, utils.PageInfoVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	list, total, err := service.ServiceGroupSys.GetUserDepositList(pageInfo, uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	list, total, errCode := service.ServiceGroupSys.GetUserDepositList(pageInfo, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -199,7 +192,7 @@ func (b *SysUserApi) GetUserDepositList(c *gin.Context) {
 		Total:    total,
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+	}, response.SUCCESS, c)
 }
 
 // Deposit
@@ -214,22 +207,21 @@ func (b *SysUserApi) Deposit(c *gin.Context) {
 	var req systemReq.UserDepositReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
 	req.Uid = uid
-	result, err := service.ServiceGroupSys.Deposit(req)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	result, errCode := service.ServiceGroupSys.Deposit(req)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithDetailed(result, "获取成功", c)
+	response.OkWithDetailed(result, response.SUCCESS, c)
 }
 
 // Withdraw
@@ -244,22 +236,21 @@ func (b *SysUserApi) Withdraw(c *gin.Context) {
 	var req systemReq.UserWithdrawReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
 	req.Uid = uid
-	err = service.ServiceGroupSys.Withdraw(req)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	errCode := service.ServiceGroupSys.Withdraw(req)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	response.OkWithMessage("获取成功", c)
+	response.Ok(c)
 }
 
 // GetUserWithdrawList
@@ -274,23 +265,22 @@ func (b *SysUserApi) GetUserWithdrawList(c *gin.Context) {
 	var pageInfo systemReq.UserWithdrawRecordReq
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(pageInfo, utils.PageInfoVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	list, total, err := service.ServiceGroupSys.GetUserWithdrawList(pageInfo, uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	list, total, errCode := service.ServiceGroupSys.GetUserWithdrawList(pageInfo, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -298,7 +288,7 @@ func (b *SysUserApi) GetUserWithdrawList(c *gin.Context) {
 		Total:    total,
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+	}, response.SUCCESS, c)
 }
 
 // GetUserFreeSpinList
@@ -313,23 +303,22 @@ func (b *SysUserApi) GetUserFreeSpinList(c *gin.Context) {
 	var pageInfo request.PageInfo
 	err := c.ShouldBindQuery(&pageInfo)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	err = utils.Verify(pageInfo, utils.PageInfoVerify)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.NotfoundParameter, c)
 		return
 	}
 	uid, err := utils.GetUserID(c)
 	if err != nil {
-		response.FailWithMessage(err.Error(), c)
+		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
-	list, total, err := service.ServiceGroupSys.GetUserFreeSpinList(pageInfo, uid)
-	if err != nil {
-		global.FPG_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage(err.Error(), c)
+	list, total, errCode := service.ServiceGroupSys.GetUserFreeSpinList(pageInfo, uid)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -337,5 +326,5 @@ func (b *SysUserApi) GetUserFreeSpinList(c *gin.Context) {
 		Total:    total,
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+	}, response.SUCCESS, c)
 }

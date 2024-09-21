@@ -15,7 +15,7 @@ func JWTAuth() gin.HandlerFunc {
 		token := c.GetHeader("Authorization")
 
 		if len(token) == 0 {
-			response.NoAuth("未登录或非法访问", c)
+			response.NoAuth(response.TokenMissing, c)
 			c.Abort()
 			return
 		}
@@ -24,13 +24,13 @@ func JWTAuth() gin.HandlerFunc {
 
 		if err != nil {
 			global.FPG_LOG.Error("签名错误!", zap.Error(err))
-			response.FailWithMessage("签名错误", c)
+			response.FailWithMessage(response.TokenError, c)
 			c.Abort()
 			return
 		}
 
 		if jwtClaims.Exp < time.Now().Unix() {
-			response.NoAuth("授权已过期", c)
+			response.NoAuth(response.TokenExpired, c)
 			c.Abort()
 			return
 		}
