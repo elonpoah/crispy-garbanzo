@@ -8,6 +8,7 @@ import (
 type Register struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	Pid      uint   `json:"inviteCode"`
 	NickName string `json:"nickName"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`

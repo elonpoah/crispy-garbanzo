@@ -6,6 +6,7 @@ import (
 
 type SysUser struct {
 	global.Model
+	Pid           uint    `json:"pid" gorm:"comment:邀请码"`
 	Username      string  `json:"userName" gorm:"index;comment:用户登录名"`             // 用户登录名
 	Password      string  `json:"-" gorm:"type:varchar(125);comment:用户登录密码"`       // 用户登录密码
 	NickName      string  `json:"nickName" gorm:"default:Hi;comment:用户昵称"`         // 用户昵称

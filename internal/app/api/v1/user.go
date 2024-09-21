@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"crispy-garbanzo/common/request"
 	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
@@ -45,6 +46,7 @@ func (b *SysUserApi) Login(c *gin.Context) {
 	token := utils.CreateToken(user.ID, "app", global.FPG_CONFIG.Jwt.Key, global.FPG_CONFIG.Jwt.ExpireTime)
 	userInfo := systemRes.SysUserResponse{
 		ID:            user.ID,
+		Pid:           user.Pid,
 		Username:      user.Username,
 		NickName:      user.NickName,
 		Phone:         user.Phone,
@@ -72,7 +74,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	user := &system.SysUser{Username: r.Username, NickName: r.NickName, Password: r.Password, Phone: r.Phone, Email: r.Email}
+	user := &system.SysUser{Username: r.Username, NickName: r.NickName, Password: r.Password, Phone: r.Phone, Email: r.Email, Pid: r.Pid}
 	userReturn, err := service.ServiceGroupSys.Register(*user)
 	if err != nil {
 		global.FPG_LOG.Error("注册失败!", zap.Error(err))
@@ -81,6 +83,7 @@ func (b *SysUserApi) Register(c *gin.Context) {
 	}
 	userInfo := systemRes.SysUserResponse{
 		ID:            userReturn.ID,
+		Pid:           user.Pid,
 		Username:      userReturn.Username,
 		NickName:      userReturn.NickName,
 		Phone:         userReturn.Phone,
@@ -285,6 +288,45 @@ func (b *SysUserApi) GetUserWithdrawList(c *gin.Context) {
 		return
 	}
 	list, total, err := service.ServiceGroupSys.GetUserWithdrawList(pageInfo, uid)
+	if err != nil {
+		global.FPG_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
+}
+
+// GetUserFreeSpinList
+// @Tags      用户中心
+// @Summary   免费旋转记录
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     data  query      request.PageInfo                                        true  "页码, 每页大小"
+// @Success   200   {object}  response.Response{data=response.PageResult,msg=string}  "分页获取用户列表,返回包括列表,总数,页码,每页数量"
+// @Router    /api/freeSpin/history [get]
+func (b *SysUserApi) GetUserFreeSpinList(c *gin.Context) {
+	var pageInfo request.PageInfo
+	err := c.ShouldBindQuery(&pageInfo)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = utils.Verify(pageInfo, utils.PageInfoVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	list, total, err := service.ServiceGroupSys.GetUserFreeSpinList(pageInfo, uid)
 	if err != nil {
 		global.FPG_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage(err.Error(), c)

@@ -5,7 +5,9 @@ import (
 	system "crispy-garbanzo/internal/app/models"
 	systemReq "crispy-garbanzo/internal/app/models/request"
 	systemRes "crispy-garbanzo/internal/app/models/response"
+	"crispy-garbanzo/utils"
 	"errors"
+	"math/rand"
 	"time"
 
 	"gorm.io/gorm"
@@ -193,7 +195,7 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 func (userService *UserService) GetGameHistory(req systemReq.GameHistoryReq, uid int) (list *[]system.GameRecord, total int64, err error) {
 	limit := req.PageSize
 	offset := req.PageSize * (req.Page - 1)
-	db := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ?", uid).Order("created_at ASC")
+	db := global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ?", uid).Order("open_time DESC")
 	if req.Status != 0 {
 		db = db.Where("status = ?", req.Status)
 	}
@@ -218,11 +220,87 @@ func (userService *UserService) GetUserSummary(uid int) (result systemRes.UserSu
 	if err != nil {
 		return
 	}
-	err = global.FPG_DB.Model(&system.GameRecord{}).Where("uid = ? AND status = ? AND activyty_spend = ?", uid, 1, 0).Count(&FreeCount).Error
+	err = global.FPG_DB.Model(&system.InviteDuty{}).Where("uid = ?", uid).Count(&FreeCount).Error
 	if err != nil {
 		return
 	}
 	result.SessionCount = SessionCount
-	result.FreeCount = 0
+	result.FreeCount = FreeCount
 	return result, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: CheckInviteDuty
+//@description: 邀请注册活动
+//@return: result systemRes.InviteSessionResponse,err error
+
+func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result systemRes.InviteSessionResponse, err error) {
+	startOfTime, endOfTime := utils.GetTimeRange(rangeType)
+	var userIds []uint
+	err = global.FPG_DB.Model(&system.SysUser{}).Where("pid = ? AND created_at >= ? AND created_at < ?", uid, startOfTime, endOfTime).Pluck("id", &userIds).Error
+	if err != nil {
+		return result, err
+	}
+	result.Registrations = len(userIds)
+	err = global.FPG_DB.Model(&system.GameRecord{}).
+		Where("uid IN (?) AND created_at >= ? AND created_at < ?", userIds, startOfTime, endOfTime).
+		Select("uid, COUNT(*) as participates").
+		Group("uid").
+		Count(&result.Participates).Error
+	if err != nil {
+		return result, err
+	}
+
+	return result, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: StartInviteSpin
+//@description: 邀请注册活动
+//@return: result int,err error
+
+func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus int, err error) {
+	var recordLen int64
+	err = global.FPG_DB.Model(&system.InviteDuty{}).Where("type = ? AND uid = ?", rangeType, uid).Count(&recordLen).Error
+	if err != nil {
+		return 0, err
+	}
+	if recordLen != 0 {
+		return 0, errors.New("已抽奖，请查看抽奖记录")
+	}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	if rangeType == 1 {
+		bonus = r.Intn(2) // 0 到 1
+	}
+	if rangeType == 2 {
+		bonus = r.Intn(5) + 1 // 0 到 4，加上 1 得到 1 到 5
+		return bonus, err
+	}
+	if rangeType == 3 {
+		bonus = r.Intn(30) + 1 // 0 到 4，加上 1 得到 1 到 30
+		return bonus, err
+	}
+	record := system.InviteDuty{
+		Uid:    uid,
+		Type:   rangeType,
+		Amount: bonus,
+	}
+	err = global.FPG_DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&record).Error; err != nil {
+			return err
+		}
+		var user system.SysUser
+		if err := tx.Where("id = ?", uid).First(&user).Error; err != nil {
+			return err
+		}
+		user.Balance += float64(bonus)
+		if err := tx.Save(&user).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return bonus, err
 }

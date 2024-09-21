@@ -6,8 +6,8 @@ import (
 
 type Deposit struct {
 	global.Model
-	Uid         int     `json:"uid"`
-	Username    string  `json:"userName"`
+	Uid         int     `json:"-"`
+	Username    string  `json:"-"`
 	Type        int     `json:"type" gorm:"type:tinyint"` //2 trc20 1 erc20
 	Amount      float64 `json:"amount" gorm:"type:decimal(12,2)"`
 	FromAddress string  `json:"fromAddress"`

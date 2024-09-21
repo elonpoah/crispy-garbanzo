@@ -1,6 +1,7 @@
 package service
 
 import (
+	commonReq "crispy-garbanzo/common/request"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
 	"crispy-garbanzo/internal/app/models/request"
@@ -155,6 +156,27 @@ func (userService *UserService) GetUserWithdrawList(info request.UserWithdrawRec
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	db := global.FPG_DB.Model(&system.Withdrawal{}).Where("uid = ?", uid)
+	// if info.Username != "" {
+	// 	db = db.Where("username = ?", info.Username)
+	// }
+	err = db.Count(&total).Error
+	if err != nil {
+		return
+	}
+	err = db.Limit(limit).Offset(offset).Find(&list).Error
+	return list, total, err
+}
+
+//@author: [piexlmax](https://github.com/piexlmax)
+//@function: GetUserWithdrawList
+//@description: 分页获取数据
+//@param: info request.PageInfo
+//@return: err error, list interface{}, total int64
+
+func (userService *UserService) GetUserFreeSpinList(info commonReq.PageInfo, uid int) (list *[]system.InviteDuty, total int64, err error) {
+	limit := info.PageSize
+	offset := info.PageSize * (info.Page - 1)
+	db := global.FPG_DB.Model(&system.InviteDuty{}).Where("uid = ?", uid)
 	// if info.Username != "" {
 	// 	db = db.Where("username = ?", info.Username)
 	// }

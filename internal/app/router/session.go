@@ -10,11 +10,13 @@ type SessionApiRouter struct {
 }
 
 func (s *SessionApiRouter) InitApiRouter(Router *gin.RouterGroup) {
-	var sysUser = v1.ApiGroupSys.SessionApi
+	var sysSession = v1.ApiGroupSys.SessionApi
 	{
-		Router.POST("/session/ticket", sysUser.BuySessionTicket)
-		Router.POST("/session/check", sysUser.CheckSession)
-		Router.POST("/game/history", sysUser.GetGameHistory)
-		Router.GET("/session/summary", sysUser.GetUserSummary)
+		Router.POST("/session/ticket", sysSession.BuySessionTicket)
+		Router.POST("/session/check", sysSession.CheckSession)
+		Router.POST("/game/history", sysSession.GetGameHistory)
+		Router.GET("/session/summary", sysSession.GetUserSummary)
+		Router.POST("/free/inviteInfo", sysSession.CheckInviteDuty)
+		Router.POST("/free/inviteSpin", sysSession.StartInviteSpin)
 	}
 }

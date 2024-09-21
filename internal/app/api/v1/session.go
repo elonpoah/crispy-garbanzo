@@ -203,3 +203,91 @@ func (b *SessionApi) GetUserSummary(c *gin.Context) {
 	}
 	response.OkWithDetailed(result, "获取成功", c)
 }
+
+// CheckInviteDuty
+// @Tags      活动中心
+// @Summary   邀请注册活动
+// @Produce  application/json
+// @Security  ApiKeyAuth
+// @Param     data  body      systemReq.CheckInviteDutyReq true  "场次ID"
+// @Success   200   {object}  response.Response{data=bool, msg=string}
+// @Router    /api/free/inviteInfo [post]
+func (b *SessionApi) CheckInviteDuty(c *gin.Context) {
+	var req systemReq.CheckInviteDutyReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result, err := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
+	if err != nil {
+		global.FPG_LOG.Error("系统错误!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(result, "成功", c)
+}
+
+// StartInviteSpin
+// @Tags      活动中心
+// @Summary   邀请注册活动抽奖
+// @Produce  application/json
+// @Security  ApiKeyAuth
+// @Param     data  body      systemReq.CheckInviteDutyReq true  "场次ID"
+// @Success   200   {object}  response.Response{data=bool, msg=string}
+// @Router    /api/free/inviteSpin [post]
+func (b *SessionApi) StartInviteSpin(c *gin.Context) {
+	var req systemReq.CheckInviteDutyReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	uid, err := utils.GetUserID(c)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	result, err := service.ServiceGroupSys.CheckInviteDuty(req.Type, uid)
+	if err != nil {
+		global.FPG_LOG.Error("系统错误!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if req.Type == 1 && result.Registrations >= 1 && result.Participates >= 1 {
+		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if err != nil {
+			global.FPG_LOG.Error("系统错误!", zap.Error(err))
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+		response.OkWithDetailed(bonus, "成功", c)
+		return
+	}
+	if req.Type == 2 && result.Registrations >= 5 && result.Participates >= 5 {
+		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if err != nil {
+			global.FPG_LOG.Error("系统错误!", zap.Error(err))
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+		response.OkWithDetailed(bonus, "成功", c)
+	}
+	if req.Type == 3 && result.Registrations >= 18 && result.Participates >= 18 {
+		bonus, err := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
+		if err != nil {
+			global.FPG_LOG.Error("系统错误!", zap.Error(err))
+			response.FailWithMessage(err.Error(), c)
+			return
+		}
+		response.OkWithDetailed(bonus, "成功", c)
+		return
+	}
+	global.FPG_LOG.Error("系统错误!", zap.Error(err))
+	response.FailWithMessage("服务异常，稍后再试", c)
+}

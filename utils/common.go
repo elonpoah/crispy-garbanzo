@@ -3,6 +3,7 @@ package utils
 import (
 	"crispy-garbanzo/global"
 	"os"
+	"time"
 
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap/zapcore"
@@ -32,4 +33,33 @@ func GetWriteSyncer(file string) zapcore.WriteSyncer {
 		return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(lumberJackLogger))
 	}
 	return zapcore.AddSync(lumberJackLogger)
+}
+
+// 获取当天/当周【周日开始】/当月的时间范围
+func GetTimeRange(rangeType int) (time.Time, time.Time) {
+	now := time.Now()
+
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	if rangeType == 1 {
+		return startOfDay, endOfDay
+	}
+	startOfWeek := now.Truncate(24*time.Hour).AddDate(0, 0, -int(now.Weekday())+int(time.Sunday))
+	// 将时间设置为 0 点
+	startOfWeek = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
+	// 结束时间为下周六的 23:59:59.999
+	endOfWeek := startOfWeek.AddDate(0, 0, 6).Add(24*time.Hour - time.Nanosecond)
+
+	if rangeType == 2 {
+		return startOfWeek, endOfWeek
+	}
+
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	if rangeType == 3 {
+		return startOfMonth, endOfMonth
+	}
+	return startOfDay, startOfDay
 }

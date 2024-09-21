@@ -2,6 +2,7 @@ package response
 
 type SysUserResponse struct {
 	ID            uint    `json:"uid"`
+	Pid           uint    `json:"pid"`
 	Username      string  `json:"userName"`
 	NickName      string  `json:"nickName"`
 	Phone         string  `json:"phone"`
