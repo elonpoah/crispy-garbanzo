@@ -23,7 +23,7 @@ type SessionService struct{}
 
 func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]system.ActivitySession, errCode int) {
 	// 当前时间戳
-	now := time.Now().Unix() * 1000
+	now := time.Now().Unix()
 
 	var hotSessions []system.ActivitySession
 	var hugeBonusSessions []system.ActivitySession
@@ -87,7 +87,7 @@ func (SessionService *SessionService) GetSessionById(id uint) (session *system.A
 //@return: result system.ActivitySession,err error
 
 func (SessionService *SessionService) BuySessionTicket(id uint, uid int) (errCode int) {
-	now := time.Now().Unix() * 1000
+	now := time.Now().Unix()
 	var session system.ActivitySession
 	err := global.FPG_DB.Where("status = ? AND open_time > ? AND id = ?", 1, now, id).First(&session).Error
 	if err != nil {
@@ -174,7 +174,7 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	// 当前时间戳
-	now := time.Now().Unix() * 1000
+	now := time.Now().Unix()
 	db := global.FPG_DB.Model(&system.ActivitySession{}).Where("status = ? AND open_time > ?", 1, now)
 	if info.Type == 1 {
 		db = db.Order("activyty_bonus DESC,open_time ASC")
