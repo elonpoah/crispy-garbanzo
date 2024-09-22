@@ -123,6 +123,167 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/free/inviteInfo": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "邀请注册活动",
+                "parameters": [
+                    {
+                        "description": "场次ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckInviteDutyReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/free/inviteSpin": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "活动中心"
+                ],
+                "summary": "邀请注册活动抽奖",
+                "parameters": [
+                    {
+                        "description": "场次ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckInviteDutyReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        " msg": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/freeSpin/history": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户中心"
+                ],
+                "summary": "免费旋转记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "关键字",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页大小",
+                        "name": "pageSize",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "分页获取用户列表,返回包括列表,总数,页码,每页数量",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.PageResult"
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/game/history": {
             "post": {
                 "produces": [
@@ -736,6 +897,18 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CheckInviteDutyReq": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "description": "1:daily 2:weekly 3:monthly",
+                    "type": "integer"
+                }
+            }
+        },
         "request.GameHistoryReq": {
             "type": "object",
             "required": [
@@ -786,6 +959,9 @@ const docTemplate = `{
             "properties": {
                 "email": {
                     "type": "string"
+                },
+                "inviteCode": {
+                    "type": "integer"
                 },
                 "nickName": {
                     "type": "string"
@@ -942,6 +1118,9 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "pid": {
+                    "type": "integer"
+                },
                 "uid": {
                     "type": "integer"
                 },
@@ -978,6 +1157,9 @@ const docTemplate = `{
                 },
                 "activitySpend": {
                     "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"

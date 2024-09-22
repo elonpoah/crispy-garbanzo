@@ -8,6 +8,14 @@ definitions:
         description: 密码
         type: string
     type: object
+  request.CheckInviteDutyReq:
+    properties:
+      type:
+        description: 1:daily 2:weekly 3:monthly
+        type: integer
+    required:
+    - type
+    type: object
   request.GameHistoryReq:
     properties:
       keyword:
@@ -41,6 +49,8 @@ definitions:
     properties:
       email:
         type: string
+      inviteCode:
+        type: integer
       nickName:
         type: string
       password:
@@ -149,6 +159,8 @@ definitions:
         type: string
       phone:
         type: string
+      pid:
+        type: integer
       uid:
         type: integer
       userName:
@@ -173,6 +185,8 @@ definitions:
         type: string
       activitySpend:
         type: integer
+      createdAt:
+        type: string
       id:
         type: integer
       openTime:
@@ -245,6 +259,98 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 充值记录
+      tags:
+      - 用户中心
+  /api/free/inviteInfo:
+    post:
+      parameters:
+      - description: 场次ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckInviteDutyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  type: boolean
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 邀请注册活动
+      tags:
+      - 活动中心
+  /api/free/inviteSpin:
+    post:
+      parameters:
+      - description: 场次ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckInviteDutyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                ' msg':
+                  type: string
+                data:
+                  type: boolean
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 邀请注册活动抽奖
+      tags:
+      - 活动中心
+  /api/freeSpin/history:
+    get:
+      parameters:
+      - description: 关键字
+        in: query
+        name: keyword
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: 每页大小
+        in: query
+        name: pageSize
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 分页获取用户列表,返回包括列表,总数,页码,每页数量
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.PageResult'
+                msg:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 免费旋转记录
       tags:
       - 用户中心
   /api/game/history:
