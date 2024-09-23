@@ -10,6 +10,7 @@
 30005 = "Invalid User ID"
 30006 = "Username is already registered"
 30007 = "Old password incorrect"
+30008 = "Balance Not enough"
 40001 = "Invalid Parameters"
 40002 = "Object not found"
 40003 = "Object already existed"

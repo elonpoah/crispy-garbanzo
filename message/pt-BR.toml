@@ -10,6 +10,7 @@
 30005 = "ID de usuário inválido"
 30006 = "Nome de usuário já está registrado"
 30007 = "Senha antiga incorreta"
+30008 = "Saldo insuficiente"
 40001 = "Parâmetros inválidos"
 40002 = "Objeto não encontrado"
 40003 = "Objeto já existe"

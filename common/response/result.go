@@ -23,6 +23,7 @@ const (
 	InvalidUserId     = 30005 //无效的用户ID
 	UserNameAlready   = 30006 //用户名已注册
 	OldPasswordError  = 30007 //原密码错误
+	BalanceNoEnough   = 30008 //余额不足
 
 	InvalidParameter  = 40001 //参数无效
 	ObjectNotFound    = 40002 //对象不存在

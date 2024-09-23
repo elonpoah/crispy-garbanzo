@@ -155,6 +155,17 @@ func (userService *UserService) Deposit(req request.UserDepositReq) (address str
 //@return: address string, err error
 
 func (userService *UserService) Withdraw(req request.UserWithdrawReq) (errCode int) {
+	var userInfo system.SysUser
+	err := global.FPG_DB.Where("id = ?", req.Uid).First(&userInfo).Error
+	if err != nil {
+		return response.InvalidUserId
+	}
+	if userInfo.Balance < req.Amount {
+		return response.BalanceNoEnough
+	}
+	userInfo.FreezeBalance += req.Amount
+	userInfo.Balance -= req.Amount
+
 	withdraw := system.Withdrawal{
 		Uid:       req.Uid,
 		Username:  req.Username,
@@ -162,7 +173,15 @@ func (userService *UserService) Withdraw(req request.UserWithdrawReq) (errCode i
 		Amount:    req.Amount,
 		ToAddress: req.Address,
 	}
-	err := global.FPG_DB.Create(&withdraw).Error
+	err = global.FPG_DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&userInfo).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(&withdraw).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return response.InternalServerError
 	}
