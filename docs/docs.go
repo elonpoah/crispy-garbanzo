@@ -881,6 +881,41 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/app/platform/setting": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "公共中心"
+                ],
+                "summary": "获取平台配置",
+                "responses": {
+                    "200": {
+                        "description": "平台配置",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
