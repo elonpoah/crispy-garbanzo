@@ -8,6 +8,7 @@ import (
 
 const (
 	AppWithdrawSetting = "APP_WITHDRAW_SETTING"
+	AppInviteSetting   = "APP_INVITE_SETTING"
 )
 
 type WebStting struct {

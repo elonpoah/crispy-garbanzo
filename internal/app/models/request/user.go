@@ -35,14 +35,14 @@ type UserDepositReq struct {
 	Uid      int     `json:"uid"`
 	Username string  `json:"userName"`
 	Type     int     `json:"type" binding:"required"` //2 trc20 1 erc20
-	Amount   float64 `json:"amount" binding:"required"`
+	Amount   float64 `json:"amount" binding:"required,gt=0"`
 }
 
 type UserWithdrawReq struct {
 	Uid      int     `json:"uid"`
 	Username string  `json:"userName"`
 	Type     int     `json:"type" binding:"required"` //2 trc20 1 erc20
-	Amount   float64 `json:"amount" binding:"required"`
+	Amount   float64 `json:"amount" binding:"required,gt=0"`
 	Address  string  `json:"address" binding:"required"`
 }
 
