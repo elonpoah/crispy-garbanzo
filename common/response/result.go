@@ -40,6 +40,7 @@ const (
 	ActivityGetIn       = 70102 //请须知，只能参加一次
 	ActivityFullIn      = 70103 //当前场次参与人数已满
 	FreeSpinAlreadyJoin = 70104 //已抽奖，请查看抽奖记录
+	FreeSpinUnavilable  = 70105 //请先解锁任务再参与
 )
 
 type Response struct {
@@ -96,8 +97,8 @@ func FailWithMessage(message int, c *gin.Context) {
 
 func NoAuth(message int, c *gin.Context) {
 	msg := Messagei18(message, c)
-	c.JSON(http.StatusUnauthorized, Response{
-		7,
+	c.JSON(http.StatusOK, Response{
+		401,
 		nil,
 		msg,
 	})

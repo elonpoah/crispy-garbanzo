@@ -23,8 +23,8 @@ func JWTAuth() gin.HandlerFunc {
 		jwtClaims, err := utils.ParseToken(token, global.FPG_CONFIG.Jwt.Key)
 
 		if err != nil {
-			global.FPG_LOG.Error("签名错误!", zap.Error(err))
-			response.FailWithMessage(response.TokenError, c)
+			global.FPG_LOG.Error("签名错误或者过期!", zap.Error(err))
+			response.NoAuth(response.TokenError, c)
 			c.Abort()
 			return
 		}

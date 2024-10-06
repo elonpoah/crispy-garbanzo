@@ -248,31 +248,10 @@ func (b *SessionApi) StartInviteSpin(c *gin.Context) {
 		response.FailWithMessage(errCode, c)
 		return
 	}
-	if req.Type == 1 && result.Registrations >= 1 && result.Participates >= 1 {
-		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if errCode != response.SUCCESS {
-			response.FailWithMessage(errCode, c)
-			return
-		}
-		response.OkWithDetailed(bonus, response.SUCCESS, c)
+	bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid, result)
+	if errCode != response.SUCCESS {
+		response.FailWithMessage(errCode, c)
 		return
 	}
-	if req.Type == 2 && result.Registrations >= 5 && result.Participates >= 5 {
-		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if errCode != response.SUCCESS {
-			response.FailWithMessage(errCode, c)
-			return
-		}
-		response.OkWithDetailed(bonus, response.SUCCESS, c)
-	}
-	if req.Type == 3 && result.Registrations >= 18 && result.Participates >= 18 {
-		bonus, errCode := service.ServiceGroupSys.StartInviteSpin(req.Type, uid)
-		if errCode != response.SUCCESS {
-			response.FailWithMessage(errCode, c)
-			return
-		}
-		response.OkWithDetailed(bonus, response.SUCCESS, c)
-		return
-	}
-	response.FailWithMessage(response.NotfoundParameter, c)
+	response.OkWithDetailed(bonus, response.SUCCESS, c)
 }

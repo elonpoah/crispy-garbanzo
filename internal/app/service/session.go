@@ -1,12 +1,14 @@
 package service
 
 import (
+	"context"
 	"crispy-garbanzo/common/response"
 	"crispy-garbanzo/global"
 	system "crispy-garbanzo/internal/app/models"
 	systemReq "crispy-garbanzo/internal/app/models/request"
 	systemRes "crispy-garbanzo/internal/app/models/response"
 	"crispy-garbanzo/utils"
+	"encoding/json"
 	"errors"
 	"math/rand"
 	"time"
@@ -277,9 +279,30 @@ func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result 
 //@description: 邀请注册活动
 //@return: result int,err error
 
-func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus int, errCode int) {
+func (userService *UserService) StartInviteSpin(rangeType int, uid int, inviteValues systemRes.InviteSessionResponse) (bonus int, errCode int) {
+
+	ctx := context.Background()
+	var invite systemRes.InviteConfig
+	result, err := global.FPG_REIDS.Get(ctx, system.AppInviteSetting).Result()
+	if err != nil {
+		return 0, response.InternalServerError
+	}
+	err = json.Unmarshal([]byte(result), &invite)
+	if err != nil {
+		return 0, response.InternalServerError
+	}
+	if rangeType == 1 && (inviteValues.Registrations < int(invite.Daily.Count) || inviteValues.Participates < int64(invite.Daily.Participants)) {
+		return 0, response.FreeSpinUnavilable
+	}
+	if rangeType == 2 && (inviteValues.Registrations < int(invite.Week.Count) || inviteValues.Participates < int64(invite.Week.Participants)) {
+		return 0, response.FreeSpinUnavilable
+	}
+	if rangeType == 3 && (inviteValues.Registrations < int(invite.Month.Count) || inviteValues.Participates < int64(invite.Month.Participants)) {
+		return 0, response.FreeSpinUnavilable
+	}
+	startOfTime, endOfTime := utils.GetTimeRange(rangeType)
 	var recordLen int64
-	err := global.FPG_DB.Model(&system.InviteDuty{}).Where("type = ? AND uid = ?", rangeType, uid).Count(&recordLen).Error
+	err = global.FPG_DB.Model(&system.InviteDuty{}).Where("type = ? AND uid = ? AND created_at >= ? AND created_at < ?", rangeType, uid, startOfTime, endOfTime).Count(&recordLen).Error
 	if err != nil {
 		errCode = response.InternalServerError
 		return
@@ -289,13 +312,13 @@ func (userService *UserService) StartInviteSpin(rangeType int, uid int) (bonus i
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	if rangeType == 1 {
-		bonus = r.Intn(2) // 0 到 1
+		bonus = r.Intn(int(invite.Daily.Bonus))
 	}
 	if rangeType == 2 {
-		bonus = r.Intn(5) + 1 // 0 到 4，加上 1 得到 1 到 5
+		bonus = r.Intn(int(invite.Week.Bonus))
 	}
 	if rangeType == 3 {
-		bonus = r.Intn(30) + 1 // 0 到 4，加上 1 得到 1 到 30
+		bonus = r.Intn(int(invite.Month.Bonus))
 	}
 	record := system.InviteDuty{
 		Uid:    uid,
