@@ -42,8 +42,9 @@ const (
 	FreeSpinAlreadyJoin = 70104 //已抽奖，请查看抽奖记录
 	FreeSpinUnavilable  = 70105 //请先解锁任务再参与
 
-	ActivityEnded       = 70106 // 活动已结束
-	AlreadyParticipated = 70107 // 已参与过抽奖
+	ActivityEnded        = 70106 // 活动已结束
+	AlreadyParticipated  = 70107 // 已参与过抽奖
+	LessThanMinDrawBonus = 70108 // 单个红包金额不能低于0.01
 )
 
 type Response struct {

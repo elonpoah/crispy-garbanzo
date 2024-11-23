@@ -27,3 +27,4 @@
 70105 = "Please unlock the task first before participating"
 70106 = "The activity has ended"
 70107 = "You have already participated in the lottery"
+70108 = "The individual amount cannot be less than 0.01"

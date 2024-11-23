@@ -349,6 +349,14 @@ func (b *SysUserApi) MakeDraw(c *gin.Context) {
 		response.FailWithMessage(response.InvalidUserId, c)
 		return
 	}
+	if req.BonusType == 2 && req.Bonus < 0.01 {
+		response.FailWithMessage(response.LessThanMinDrawBonus, c)
+		return
+	}
+	if req.BonusType == 1 && req.Bonus/float64(req.Count) < 0.01 {
+		response.FailWithMessage(response.LessThanMinDrawBonus, c)
+		return
+	}
 	req.Uid = uid
 	key, errCode := service.ServiceGroupSys.MakeDraw(req)
 	if errCode != response.SUCCESS {
