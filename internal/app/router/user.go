@@ -19,5 +19,8 @@ func (s *UserApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 		Router.GET("/deposit/history", sysUser.GetUserDepositList)
 		Router.GET("/withdraw/history", sysUser.GetUserWithdrawList)
 		Router.GET("/freeSpin/history", sysUser.GetUserFreeSpinList)
+		Router.POST("/draw/make", sysUser.MakeDraw)
+		Router.GET("/draw/history", sysUser.GetUserDrawList)
+		Router.POST("/draw/join", sysUser.ClaimDrawById)
 	}
 }

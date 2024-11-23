@@ -50,3 +50,20 @@ type UserWithdrawRecordReq struct {
 	request.PageInfo
 	// system.Deposit
 }
+
+type UserMakeDrawReq struct {
+	Uid       int     `json:"uid"`
+	Username  string  `json:"userName"`
+	BonusType int     `json:"bonusType" binding:"required"`
+	Bonus     float64 `json:"bonus" binding:"required,gt=0"`
+	Count     int     `json:"count" binding:"required,gt=0"`
+}
+
+type DrawDetailReq struct {
+	Id string `json:"id" binding:"required"`
+}
+
+type UserMakeDrawRecordReq struct {
+	request.PageInfo
+	// system.Deposit
+}

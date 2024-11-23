@@ -2,9 +2,14 @@ package utils
 
 import (
 	"crispy-garbanzo/global"
+	"fmt"
+	"math"
+	"math/rand"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap/zapcore"
 )
@@ -62,4 +67,43 @@ func GetTimeRange(rangeType int) (time.Time, time.Time) {
 		return startOfMonth, endOfMonth
 	}
 	return startOfDay, startOfDay
+}
+
+func GenerateUUID12() string {
+	u, err := uuid.NewV7()
+	if err != nil {
+		panic(fmt.Errorf("failed to generate UUID: %v", err))
+	}
+	uStr := strings.ReplaceAll(u.String(), "-", "")
+	return uStr[:12]
+}
+
+func GenerateRandomParts(total float64, n int) []float64 {
+	// 使用独立的随机数生成器
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	weights := make([]float64, n)
+	sum := 0.0
+
+	// 生成随机权重
+	for i := 0; i < n; i++ {
+		weights[i] = rng.Float64()
+		sum += weights[i]
+	}
+
+	parts := make([]float64, n)
+	totalRounded := math.Round(total*100) / 100 // 确保总金额也是保留两位小数
+	allocated := 0.0                            // 用于跟踪分配的总金额
+
+	// 计算每个部分并保留两位小数
+	for i := 0; i < n; i++ {
+		if i == n-1 {
+			// 最后一份确保总和与总金额一致，避免舍入误差
+			parts[i] = totalRounded - allocated
+		} else {
+			parts[i] = math.Round((weights[i]/sum)*totalRounded*100) / 100
+			allocated += parts[i]
+		}
+	}
+
+	return parts
 }

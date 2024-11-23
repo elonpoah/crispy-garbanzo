@@ -15,3 +15,14 @@ type LoginResponse struct {
 	User  SysUserResponse `json:"user"`
 	Token string          `json:"token"`
 }
+
+type DrawDetailRes struct {
+	Username     string  `json:"userName"`
+	DrawId       string  `json:"drawId"`
+	BonusType    int     `json:"bonusType"`
+	Bonus        float64 `json:"bonus"`
+	Distribute   float64 `json:"distribute"`
+	Count        int     `json:"count"`
+	Participants uint    `json:"participants"`
+	Status       uint    `json:"status"`
+}

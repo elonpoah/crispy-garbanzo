@@ -279,7 +279,7 @@ func (userService *UserService) CheckInviteDuty(rangeType int, uid int) (result 
 //@description: 邀请注册活动
 //@return: result int,err error
 
-func (userService *UserService) StartInviteSpin(rangeType int, uid int, inviteValues systemRes.InviteSessionResponse) (bonus int, errCode int) {
+func (userService *UserService) StartInviteSpin(rangeType int, uid int, inviteValues systemRes.InviteSessionResponse) (bonus float64, errCode int) {
 
 	ctx := context.Background()
 	var invite systemRes.InviteConfig
@@ -311,15 +311,20 @@ func (userService *UserService) StartInviteSpin(rangeType int, uid int, inviteVa
 		return 0, response.FreeSpinAlreadyJoin
 	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var maxBonus float64
+
+	// 根据 rangeType 确定最大值
 	if rangeType == 1 {
-		bonus = r.Intn(int(invite.Daily.Bonus))
+		maxBonus = invite.Daily.Bonus
+	} else if rangeType == 2 {
+		maxBonus = invite.Week.Bonus
+	} else if rangeType == 3 {
+		maxBonus = invite.Month.Bonus
 	}
-	if rangeType == 2 {
-		bonus = r.Intn(int(invite.Week.Bonus))
-	}
-	if rangeType == 3 {
-		bonus = r.Intn(int(invite.Month.Bonus))
-	}
+
+	// 生成浮点数随机值
+	bonus = r.Float64() * maxBonus
+
 	record := system.InviteDuty{
 		Uid:    uid,
 		Type:   rangeType,

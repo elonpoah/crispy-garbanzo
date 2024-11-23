@@ -20,5 +20,6 @@ func (s *BaseApiRouter) InitApiRouter(Router *gin.RouterGroup) {
 		Router.POST("/session/list", session.GetSessionList)
 		Router.POST("/session/detail", session.GetSessionById)
 		Router.GET("/platform/setting", system.GetPlatformSetting)
+		Router.POST("/draw/detail", sysUser.GetDrawById)
 	}
 }

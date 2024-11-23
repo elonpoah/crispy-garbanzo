@@ -16,14 +16,14 @@ const (
 	TokenExpired = 20002 //Token已过期
 	TokenError   = 20003 //Token错误
 
-	UserNotFound      = 30001 //用户不存在
-	PasswordError     = 30002 //密码错误
-	UserPasswordError = 30003 //用户名不存在或者密码错误
-	UserLoginForbiden = 30004 //用户被禁止登录
-	InvalidUserId     = 30005 //无效的用户ID
-	UserNameAlready   = 30006 //用户名已注册
-	OldPasswordError  = 30007 //原密码错误
-	BalanceNoEnough   = 30008 //余额不足
+	UserNotFound             = 30001 //用户不存在
+	PasswordError            = 30002 //密码错误
+	UserPasswordError        = 30003 //用户名不存在或者密码错误
+	UserLoginForbiden        = 30004 //用户被禁止登录
+	InvalidUserId            = 30005 //无效的用户ID
+	UserNameAlready          = 30006 //用户名已注册
+	OldPasswordError         = 30007 //原密码错误
+	AvailableBalanceNoEnough = 30008 //用户可提现余额不足
 
 	InvalidParameter  = 40001 //参数无效
 	ObjectNotFound    = 40002 //对象不存在
@@ -41,6 +41,9 @@ const (
 	ActivityFullIn      = 70103 //当前场次参与人数已满
 	FreeSpinAlreadyJoin = 70104 //已抽奖，请查看抽奖记录
 	FreeSpinUnavilable  = 70105 //请先解锁任务再参与
+
+	ActivityEnded       = 70106 // 活动已结束
+	AlreadyParticipated = 70107 // 已参与过抽奖
 )
 
 type Response struct {
