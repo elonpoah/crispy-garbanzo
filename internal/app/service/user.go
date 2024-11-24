@@ -146,6 +146,18 @@ func (userService *UserService) Deposit(req request.UserDepositReq) (address str
 		if err != nil {
 			return address, response.InternalServerError
 		}
+		deposit := system.Deposit{
+			Uid:       req.Uid,
+			Username:  req.Username,
+			Type:      req.Type,
+			Amount:    req.Amount,
+			ToAddress: record.Address,
+			Status:    0,
+		}
+		err = global.FPG_DB.Save(&deposit).Error
+		if err != nil {
+			return address, response.InternalServerError
+		}
 		return record.Address, response.SUCCESS
 	} else {
 		return record.Address, response.SUCCESS
@@ -460,6 +472,11 @@ func (userService *UserService) ClaimDrawById(id string, uid int) (bonus float64
 	})
 
 	if err != nil {
+		_, rollbackErr := global.FPG_REIDS.LPush(ctx, bonusKey, bonus).Result()
+		if rollbackErr != nil {
+			// log.Printf("failed to rollback bonus to pool: %v", rollbackErr)
+			return 0, response.InternalServerError // 数据库事务失败,redis 补偿失败
+		}
 		return 0, response.InternalServerError // 数据库事务失败
 	}
 
