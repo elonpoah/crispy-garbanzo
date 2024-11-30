@@ -33,6 +33,7 @@ func Routers() *gin.Engine {
 	{
 		router.AppRouterGroup.UserApiRouter.InitApiRouter(PrivateGroup)
 		router.AppRouterGroup.SessionApiRouter.InitApiRouter(PrivateGroup)
+		router.AppRouterGroup.DrawApiRouter.InitApiRouter(PrivateGroup)
 	}
 	// swagger；注意：生产环境可以注释掉
 	if global.FPG_CONFIG.Application.Mode != "prod" {
