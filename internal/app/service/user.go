@@ -395,6 +395,32 @@ func (userService *UserService) ClaimDrawById(id string, uid int) (bonus float64
 	bonusKey := fmt.Sprintf("draw_bonus_pool:%s", id)
 	participantsKey := fmt.Sprintf("draw_participants:%s", id)
 	statusKey := fmt.Sprintf("draw_status:%s", id)
+	lockKey := fmt.Sprintf("lock:draw:%s", id)
+
+	lockValue := fmt.Sprintf("%d", time.Now().UnixNano())
+	success, err := global.FPG_REIDS.SetNX(ctx, lockKey, lockValue, 2*time.Second).Result()
+	if err != nil {
+		return 0, response.InternalServerError
+	}
+	if !success {
+		return 0, response.ChannelCrowded
+	}
+
+	defer func() {
+		// 使用 Lua 脚本确保解锁操作的原子性
+		unlockScript := `
+			if redis.call("GET", KEYS[1]) == ARGV[1] then
+				return redis.call("DEL", KEYS[1])
+			else
+				return 0
+			end
+		`
+		_, err := global.FPG_REIDS.Eval(ctx, unlockScript, []string{lockKey}, lockValue).Result()
+		if err != nil {
+			// log.Printf("failed to unlock: %v", err)
+			return
+		}
+	}()
 
 	// 检查活动状态
 	status, err := global.FPG_REIDS.Get(ctx, statusKey).Int()
