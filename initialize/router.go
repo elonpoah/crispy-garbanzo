@@ -23,6 +23,7 @@ func Routers() *gin.Engine {
 			"message": "Success",
 		})
 	})
+	// Router.Use(middleware.PreventRequestsRedis(global.FPG_REIDS))
 	PublicGroup := Router.Group("api")
 	{
 		router.AppRouterGroup.BaseApiRouter.InitApiRouter(PublicGroup)

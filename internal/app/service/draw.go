@@ -47,6 +47,7 @@ func (drawService *DrawService) MakeDraw(req request.UserMakeDrawReq) (key strin
 
 	// 生成抽奖唯一键
 	key = utils.GenerateUUID12()
+	expiresAt := time.Now().Add(60 * time.Minute)
 	record := system.MemberDraw{
 		BonusType: req.BonusType,
 		Uid:       req.Uid,
@@ -54,6 +55,7 @@ func (drawService *DrawService) MakeDraw(req request.UserMakeDrawReq) (key strin
 		Count:     req.Count,
 		Username:  req.Username,
 		DrawId:    key,
+		ExpiresAt: expiresAt,
 	}
 
 	// 初始化 Redis 奖励池的 TTL
@@ -207,8 +209,7 @@ func (drawService *DrawService) ClaimDrawById(id string, uid int) (bonus float64
 	// 获取奖励
 	bonus, err = global.FPG_REIDS.LPop(ctx, bonusKey).Float64()
 	if err == redis.Nil {
-		// 奖励池为空，标记活动结束
-		global.FPG_REIDS.Set(ctx, statusKey, 2, 0)
+		// 奖励池为空，活动结束
 		return 0, response.ActivityEnded
 	} else if err != nil {
 		return 0, response.InternalServerError // Redis 操作失败
@@ -247,6 +248,11 @@ func (drawService *DrawService) ClaimDrawById(id string, uid int) (bonus float64
 		// 累计派奖金额和参与人数
 		draw.Distribute += bonus
 		draw.Participants++
+		// 领取人数=发放个数，设置状态为结束
+		if draw.Participants == uint(draw.Count) {
+			global.FPG_REIDS.Set(ctx, statusKey, 2, 0)
+			draw.Status = 2
+		}
 
 		if err := tx.Save(&draw).Error; err != nil {
 			return err
