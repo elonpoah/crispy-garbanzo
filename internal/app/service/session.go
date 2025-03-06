@@ -25,15 +25,18 @@ type SessionService struct{}
 
 func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]system.ActivitySession, errCode int) {
 	// 当前时间戳
-	now := time.Now().Unix()
+	// 当前时间
+	currentUnix := time.Now()
+	now := currentUnix.Unix()
 
 	var hotSessions []system.ActivitySession
 	var hugeBonusSessions []system.ActivitySession
 	var highTwRateSessions []system.ActivitySession
+	var freeSessions []system.ActivitySession
 
 	// 按 uids 从多到少排序，取前 10 条
 	err := global.FPG_DB.
-		Where("status = ? AND open_time > ?", 1, now).
+		Where("status = ? AND open_time > ? AND activyty_spend > ?", 1, now, 0).
 		Order("uids DESC,open_time ASC").
 		Limit(10).
 		Find(&hotSessions).Error
@@ -43,7 +46,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 
 	// 按 ActivytyBonus 从大到小排序，取前 10 条
 	err = global.FPG_DB.
-		Where("status = ? AND open_time > ?", 1, now).
+		Where("status = ? AND open_time > ? AND activyty_spend > ?", 1, now, 0).
 		Order("activyty_bonus DESC,open_time ASC").
 		Limit(10).
 		Find(&hugeBonusSessions).Error
@@ -52,10 +55,20 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 	}
 
 	err = global.FPG_DB.
-		Where("status = ? AND open_time > ?", 1, now).
+		Where("status = ? AND open_time > ? AND activyty_spend > ?", 1, now, 0).
 		Order("activyty_limit_count ASC").
 		Limit(10).
 		Find(&highTwRateSessions).Error
+	if err != nil {
+		return nil, response.InternalServerError
+	}
+
+	endOfDay := time.Date(currentUnix.Year(), currentUnix.Month(), currentUnix.Day(), 23, 59, 59, 0, currentUnix.Location())
+	endOfDayUnix := endOfDay.Unix()
+	err = global.FPG_DB.
+		Where("status = ? AND open_time > ? AND open_time <= ? AND activyty_spend = ?", 1, now, endOfDayUnix, 0).
+		Limit(1).
+		Find(&freeSessions).Error
 	if err != nil {
 		return nil, response.InternalServerError
 	}
@@ -65,6 +78,7 @@ func (SessionService *SessionService) GetHomeRecommand() (result *map[string][]s
 		"hot":        hotSessions,
 		"hugebonus":  hugeBonusSessions,
 		"hightwrate": highTwRateSessions,
+		"free":       freeSessions,
 	}
 
 	return result, response.SUCCESS
@@ -177,7 +191,7 @@ func (userService *UserService) GetSessionList(info systemReq.SessionListReq) (l
 	offset := info.PageSize * (info.Page - 1)
 	// 当前时间戳
 	now := time.Now().Unix()
-	db := global.FPG_DB.Model(&system.ActivitySession{}).Where("status = ? AND open_time > ?", 1, now)
+	db := global.FPG_DB.Model(&system.ActivitySession{}).Where("status = ? AND open_time > ? AND activyty_spend > ?", 1, now, 0)
 	if info.Type == 1 {
 		db = db.Order("activyty_bonus DESC,open_time ASC")
 	}
